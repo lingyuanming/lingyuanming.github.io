@@ -1,0 +1,744 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="LYM">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="这一章主要是介绍了网页中Javascript在浏览器中是怎样加载执行的。一般来讲，浏览器先解析HTML,CSS，Javascript，然后再渲染页面。Javascript脚本一般在网页中与用户交互行为有关。关于浏览器做了什么，这里比较详细，浏览器做了什么  low请求页面 http请求1234567891011121314151617181920212223POST &#x2F;vulnerabiliti">
+<meta property="og:type" content="article">
+<meta property="og:title" content="dvwa-JS-attack">
+<meta property="og:url" content="http://blog.lingyuanming.site/2022/06/07/dvwa-JS-attack/index.html">
+<meta property="og:site_name" content="LYM的博客">
+<meta property="og:description" content="这一章主要是介绍了网页中Javascript在浏览器中是怎样加载执行的。一般来讲，浏览器先解析HTML,CSS，Javascript，然后再渲染页面。Javascript脚本一般在网页中与用户交互行为有关。关于浏览器做了什么，这里比较详细，浏览器做了什么  low请求页面 http请求1234567891011121314151617181920212223POST &#x2F;vulnerabiliti">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/07/dvwa-JS-attack/1692515916862.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/07/dvwa-JS-attack/1692531590407.png">
+<meta property="article:published_time" content="2022-06-07T02:10:10.000Z">
+<meta property="article:modified_time" content="2022-06-07T02:10:10.000Z">
+<meta property="article:author" content="LYM">
+<meta property="article:tag" content="XSS-JS-attack">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://blog.lingyuanming.site/2022/06/07/dvwa-JS-attack/1692515916862.png">
+  
+  
+  
+  <title>dvwa-JS-attack - LYM的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.lingyuanming.site","root":"/","version":"1.9.5","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>LYM</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="dvwa-JS-attack"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        LYM
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-06-07 10:10" pubdate>
+          2022年6月7日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          22k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          184 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">dvwa-JS-attack</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>这一章主要是介绍了网页中Javascript在浏览器中是怎样加载执行的。一般来讲，浏览器先解析HTML,CSS，Javascript，然后再渲染页面。Javascript脚本一般在网页中与用户交互行为有关。关于浏览器做了什么，这里比较详细，<a href="/2022/07/01/%E6%B5%8F%E8%A7%88%E5%99%A8%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88/" title="浏览器做了什么">浏览器做了什么</a></p>
+</blockquote>
+<h1 id="low"><a href="#low" class="headerlink" title="low"></a>low</h1><h2 id="请求页面"><a href="#请求页面" class="headerlink" title="请求页面"></a>请求页面</h2><p><img src="/2022/06/07/dvwa-JS-attack/1692515916862.png" srcset="/img/loading.gif" lazyload alt="1692515916862"></p>
+<h2 id="http请求"><a href="#http请求" class="headerlink" title="http请求"></a>http请求</h2><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/vulnerabilities/javascript/</span> <span class="hljs-meta">HTTP/1.1</span><br><span class="hljs-attribute">Host</span><span class="hljs-punctuation">: </span>localhost<br><span class="hljs-attribute">Content-Length</span><span class="hljs-punctuation">: </span>65<br><span class="hljs-attribute">Cache-Control</span><span class="hljs-punctuation">: </span>max-age=0<br><span class="hljs-attribute">sec-ch-ua</span><span class="hljs-punctuation">: </span><br><span class="hljs-attribute">sec-ch-ua-mobile</span><span class="hljs-punctuation">: </span>?0<br><span class="hljs-attribute">sec-ch-ua-platform</span><span class="hljs-punctuation">: </span>&quot;&quot;<br><span class="hljs-attribute">Upgrade-Insecure-Requests</span><span class="hljs-punctuation">: </span>1<br><span class="hljs-attribute">Origin</span><span class="hljs-punctuation">: </span>http://localhost<br><span class="hljs-attribute">Content-Type</span><span class="hljs-punctuation">: </span>application/x-www-form-urlencoded<br><span class="hljs-attribute">User-Agent</span><span class="hljs-punctuation">: </span>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36<br><span class="hljs-attribute">Accept</span><span class="hljs-punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7<br><span class="hljs-attribute">Sec-Fetch-Site</span><span class="hljs-punctuation">: </span>same-origin<br><span class="hljs-attribute">Sec-Fetch-Mode</span><span class="hljs-punctuation">: </span>navigate<br><span class="hljs-attribute">Sec-Fetch-User</span><span class="hljs-punctuation">: </span>?1<br><span class="hljs-attribute">Sec-Fetch-Dest</span><span class="hljs-punctuation">: </span>document<br><span class="hljs-attribute">Referer</span><span class="hljs-punctuation">: </span>http://localhost/vulnerabilities/javascript/<br><span class="hljs-attribute">Accept-Encoding</span><span class="hljs-punctuation">: </span>gzip, deflate<br><span class="hljs-attribute">Accept-Language</span><span class="hljs-punctuation">: </span>zh-CN,zh;q=0.9<br><span class="hljs-attribute">Cookie</span><span class="hljs-punctuation">: </span>PHPSESSID=1ekmlj5hkmfpg44br6ilefo6s2; security=low<br><span class="hljs-attribute">Connection</span><span class="hljs-punctuation">: </span>close<br><br><span class="language-dts"><span class="hljs-attr">token</span><span class="hljs-operator">=</span><span class="hljs-number">8</span>b479aefbd90795395b3e7089ae0dc09<span class="hljs-variable">&amp;phrase</span>=success<span class="hljs-variable">&amp;send</span>=Submit</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p>源码如下，中间那一大团使用了 md5 加密生成了 token，和之前的源码不同在于这次 token 是在前端生成的。generate_token() 函数的作用是获取 “phrase” 参数中的值，将其的 rot13 加密的结果进行 md5 加密作为 token 的值。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs php"> <span class="hljs-meta">&lt;?php</span><br><span class="hljs-variable">$page</span>[ <span class="hljs-string">&#x27;body&#x27;</span> ] .= <span class="hljs-string">&lt;&lt;&lt;EOF</span><br><span class="hljs-string">&lt;script&gt;</span><br><span class="hljs-string"></span><br><span class="hljs-string">/*</span><br><span class="hljs-string">MD5 code from here</span><br><span class="hljs-string">https://github.com/blueimp/JavaScript-MD5</span><br><span class="hljs-string">*/</span><br><span class="hljs-string"></span><br><span class="hljs-string">!function(n)&#123;&quot;use strict&quot;;function t(n,t)&#123;var r=(65535&amp;n)+(65535&amp;t);return(n&gt;&gt;16)+(t&gt;&gt;16)+(r&gt;&gt;16)&lt;&lt;16|65535&amp;r&#125;function r(n,t)&#123;return n&lt;&lt;t|n&gt;&gt;&gt;32-t&#125;function e(n,e,o,u,c,f)&#123;return t(r(t(t(e,n),t(u,f)),c),o)&#125;function o(n,t,r,o,u,c,f)&#123;return e(t&amp;r|~t&amp;o,n,t,u,c,f)&#125;function u(n,t,r,o,u,c,f)&#123;return e(t&amp;o|r&amp;~o,n,t,u,c,f)&#125;function c(n,t,r,o,u,c,f)&#123;return e(t^r^o,n,t,u,c,f)&#125;function f(n,t,r,o,u,c,f)&#123;return e(r^(t|~o),n,t,u,c,f)&#125;function i(n,r)&#123;n[r&gt;&gt;5]|=128&lt;&lt;r%32,n[14+(r+64&gt;&gt;&gt;9&lt;&lt;4)]=r;var e,i,a,d,h,l=1732584193,g=-271733879,v=-1732584194,m=271733878;for(e=0;e&lt;n.length;e+=16)i=l,a=g,d=v,h=m,g=f(g=f(g=f(g=f(g=c(g=c(g=c(g=c(g=u(g=u(g=u(g=u(g=o(g=o(g=o(g=o(g,v=o(v,m=o(m,l=o(l,g,v,m,n[e],7,-680876936),g,v,n[e+1],12,-389564586),l,g,n[e+2],17,606105819),m,l,n[e+3],22,-1044525330),v=o(v,m=o(m,l=o(l,g,v,m,n[e+4],7,-176418897),g,v,n[e+5],12,1200080426),l,g,n[e+6],17,-1473231341),m,l,n[e+7],22,-45705983),v=o(v,m=o(m,l=o(l,g,v,m,n[e+8],7,1770035416),g,v,n[e+9],12,-1958414417),l,g,n[e+10],17,-42063),m,l,n[e+11],22,-1990404162),v=o(v,m=o(m,l=o(l,g,v,m,n[e+12],7,1804603682),g,v,n[e+13],12,-40341101),l,g,n[e+14],17,-1502002290),m,l,n[e+15],22,1236535329),v=u(v,m=u(m,l=u(l,g,v,m,n[e+1],5,-165796510),g,v,n[e+6],9,-1069501632),l,g,n[e+11],14,643717713),m,l,n[e],20,-373897302),v=u(v,m=u(m,l=u(l,g,v,m,n[e+5],5,-701558691),g,v,n[e+10],9,38016083),l,g,n[e+15],14,-660478335),m,l,n[e+4],20,-405537848),v=u(v,m=u(m,l=u(l,g,v,m,n[e+9],5,568446438),g,v,n[e+14],9,-1019803690),l,g,n[e+3],14,-187363961),m,l,n[e+8],20,1163531501),v=u(v,m=u(m,l=u(l,g,v,m,n[e+13],5,-1444681467),g,v,n[e+2],9,-51403784),l,g,n[e+7],14,1735328473),m,l,n[e+12],20,-1926607734),v=c(v,m=c(m,l=c(l,g,v,m,n[e+5],4,-378558),g,v,n[e+8],11,-2022574463),l,g,n[e+11],16,1839030562),m,l,n[e+14],23,-35309556),v=c(v,m=c(m,l=c(l,g,v,m,n[e+1],4,-1530992060),g,v,n[e+4],11,1272893353),l,g,n[e+7],16,-155497632),m,l,n[e+10],23,-1094730640),v=c(v,m=c(m,l=c(l,g,v,m,n[e+13],4,681279174),g,v,n[e],11,-358537222),l,g,n[e+3],16,-722521979),m,l,n[e+6],23,76029189),v=c(v,m=c(m,l=c(l,g,v,m,n[e+9],4,-640364487),g,v,n[e+12],11,-421815835),l,g,n[e+15],16,530742520),m,l,n[e+2],23,-995338651),v=f(v,m=f(m,l=f(l,g,v,m,n[e],6,-198630844),g,v,n[e+7],10,1126891415),l,g,n[e+14],15,-1416354905),m,l,n[e+5],21,-57434055),v=f(v,m=f(m,l=f(l,g,v,m,n[e+12],6,1700485571),g,v,n[e+3],10,-1894986606),l,g,n[e+10],15,-1051523),m,l,n[e+1],21,-2054922799),v=f(v,m=f(m,l=f(l,g,v,m,n[e+8],6,1873313359),g,v,n[e+15],10,-30611744),l,g,n[e+6],15,-1560198380),m,l,n[e+13],21,1309151649),v=f(v,m=f(m,l=f(l,g,v,m,n[e+4],6,-145523070),g,v,n[e+11],10,-1120210379),l,g,n[e+2],15,718787259),m,l,n[e+9],21,-343485551),l=t(l,i),g=t(g,a),v=t(v,d),m=t(m,h);return[l,g,v,m]&#125;function a(n)&#123;var t,r=&quot;&quot;,e=32*n.length;for(t=0;t&lt;e;t+=8)r+=String.fromCharCode(n[t&gt;&gt;5]&gt;&gt;&gt;t%32&amp;255);return r&#125;function d(n)&#123;var t,r=[];for(r[(n.length&gt;&gt;2)-1]=void 0,t=0;t&lt;r.length;t+=1)r[t]=0;var e=8*n.length;for(t=0;t&lt;e;t+=8)r[t&gt;&gt;5]|=(255&amp;n.charCodeAt(t/8))&lt;&lt;t%32;return r&#125;function h(n)&#123;return a(i(d(n),8*n.length))&#125;function l(n,t)&#123;var r,e,o=d(n),u=[],c=[];for(u[15]=c[15]=void 0,o.length&gt;16&amp;&amp;(o=i(o,8*n.length)),r=0;r&lt;16;r+=1)u[r]=909522486^o[r],c[r]=1549556828^o[r];return e=i(u.concat(d(t)),512+8*t.length),a(i(c.concat(e),640))&#125;function g(n)&#123;var t,r,e=&quot;&quot;;for(r=0;r&lt;n.length;r+=1)t=n.charCodeAt(r),e+=&quot;0123456789abcdef&quot;.charAt(t&gt;&gt;&gt;4&amp;15)+&quot;0123456789abcdef&quot;.charAt(15&amp;t);return e&#125;function v(n)&#123;return unescape(encodeURIComponent(n))&#125;function m(n)&#123;return h(v(n))&#125;function p(n)&#123;return g(m(n))&#125;function s(n,t)&#123;return l(v(n),v(t))&#125;function C(n,t)&#123;return g(s(n,t))&#125;function A(n,t,r)&#123;return t?r?s(t,n):C(t,n):r?m(n):p(n)&#125;&quot;function&quot;==typeof define&amp;&amp;define.amd?define(function()&#123;return A&#125;):&quot;object&quot;==typeof module&amp;&amp;module.exports?module.exports=A:n.md5=A&#125;(this);</span><br><span class="hljs-string"></span><br><span class="hljs-string">    function rot13(inp) &#123;</span><br><span class="hljs-string">        return inp.replace(/[a-zA-Z]/g,function(c)&#123;return String.fromCharCode((c&lt;=&quot;Z&quot;?90:122)&gt;=(c=c.charCodeAt(0)+13)?c:c-26);&#125;);</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string"></span><br><span class="hljs-string">    function generate_token() &#123;</span><br><span class="hljs-string">        var phrase = document.getElementById(&quot;phrase&quot;).value;</span><br><span class="hljs-string">        document.getElementById(&quot;token&quot;).value = md5(rot13(phrase));</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string"></span><br><span class="hljs-string">    generate_token();</span><br><span class="hljs-string">&lt;/script&gt;</span><br><span class="hljs-string">EOF</span>;<br><span class="hljs-meta">?&gt;</span><br><br></code></pre></td></tr></table></figure>
+
+<p>index.php源码。当phrase=”success”,而且token=md5(str_rot13(“success”)),才会成功。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-keyword">if</span> (<span class="hljs-title function_ invoke__">array_key_exists</span> (<span class="hljs-string">&quot;phrase&quot;</span>, <span class="hljs-variable">$_POST</span>) &amp;&amp; <span class="hljs-title function_ invoke__">array_key_exists</span> (<span class="hljs-string">&quot;token&quot;</span>, <span class="hljs-variable">$_POST</span>)) &#123;<br><br>		<span class="hljs-variable">$phrase</span> = <span class="hljs-variable">$_POST</span>[<span class="hljs-string">&#x27;phrase&#x27;</span>];<br>		<span class="hljs-variable">$token</span> = <span class="hljs-variable">$_POST</span>[<span class="hljs-string">&#x27;token&#x27;</span>];<br><br>		<span class="hljs-keyword">if</span> (<span class="hljs-variable">$phrase</span> == <span class="hljs-string">&quot;success&quot;</span>) &#123;<br>			<span class="hljs-keyword">switch</span>( <span class="hljs-title function_ invoke__">dvwaSecurityLevelGet</span>() ) &#123;<br>				<span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;low&#x27;</span>:<br>					<span class="hljs-keyword">if</span> (<span class="hljs-variable">$token</span> == <span class="hljs-title function_ invoke__">md5</span>(<span class="hljs-title function_ invoke__">str_rot13</span>(<span class="hljs-string">&quot;success&quot;</span>))) &#123;<br>						<span class="hljs-variable">$message</span> = <span class="hljs-string">&quot;&lt;p style=&#x27;color:red&#x27;&gt;Well done!&lt;/p&gt;&quot;</span>;<br>					&#125; <span class="hljs-keyword">else</span> &#123;<br>						<span class="hljs-variable">$message</span> = <span class="hljs-string">&quot;&lt;p&gt;Invalid token.&lt;/p&gt;&quot;</span>;<br>					&#125;<br>					<span class="hljs-keyword">break</span>;<br></code></pre></td></tr></table></figure>
+
+<h1 id="攻击思路"><a href="#攻击思路" class="headerlink" title="攻击思路"></a>攻击思路</h1><p>这里的逻辑就是前后端使用相同的参数和算法生成token，最后再进行对比两个token。一致则通过。</p>
+<ol>
+<li>phrase输入框 <code>success</code></li>
+<li>浏览器F12开发者工具控制台。<code>generate_token()</code></li>
+<li>点击提交</li>
+</ol>
+<h1 id="medium"><a href="#medium" class="headerlink" title="medium"></a>medium</h1><h2 id="http请求-1"><a href="#http请求-1" class="headerlink" title="http请求"></a>http请求</h2><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/vulnerabilities/javascript/</span> <span class="hljs-meta">HTTP/1.1</span><br><span class="hljs-attribute">Host</span><span class="hljs-punctuation">: </span>localhost<br><span class="hljs-attribute">Content-Length</span><span class="hljs-punctuation">: </span>45<br><span class="hljs-attribute">Cache-Control</span><span class="hljs-punctuation">: </span>max-age=0<br><span class="hljs-attribute">sec-ch-ua</span><span class="hljs-punctuation">: </span><br><span class="hljs-attribute">sec-ch-ua-mobile</span><span class="hljs-punctuation">: </span>?0<br><span class="hljs-attribute">sec-ch-ua-platform</span><span class="hljs-punctuation">: </span>&quot;&quot;<br><span class="hljs-attribute">Upgrade-Insecure-Requests</span><span class="hljs-punctuation">: </span>1<br><span class="hljs-attribute">Origin</span><span class="hljs-punctuation">: </span>http://localhost<br><span class="hljs-attribute">Content-Type</span><span class="hljs-punctuation">: </span>application/x-www-form-urlencoded<br><span class="hljs-attribute">User-Agent</span><span class="hljs-punctuation">: </span>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36<br><span class="hljs-attribute">Accept</span><span class="hljs-punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7<br><span class="hljs-attribute">Sec-Fetch-Site</span><span class="hljs-punctuation">: </span>same-origin<br><span class="hljs-attribute">Sec-Fetch-Mode</span><span class="hljs-punctuation">: </span>navigate<br><span class="hljs-attribute">Sec-Fetch-User</span><span class="hljs-punctuation">: </span>?1<br><span class="hljs-attribute">Sec-Fetch-Dest</span><span class="hljs-punctuation">: </span>document<br><span class="hljs-attribute">Referer</span><span class="hljs-punctuation">: </span>http://localhost/vulnerabilities/javascript/<br><span class="hljs-attribute">Accept-Encoding</span><span class="hljs-punctuation">: </span>gzip, deflate<br><span class="hljs-attribute">Accept-Language</span><span class="hljs-punctuation">: </span>zh-CN,zh;q=0.9<br><span class="hljs-attribute">Cookie</span><span class="hljs-punctuation">: </span>PHPSESSID=1ekmlj5hkmfpg44br6ilefo6s2; security=medium<br><span class="hljs-attribute">Connection</span><span class="hljs-punctuation">: </span>close<br><br><span class="language-dts"><span class="hljs-attr">token</span><span class="hljs-operator">=</span>XXeMegnahCXX<span class="hljs-variable">&amp;phrase</span>=success<span class="hljs-variable">&amp;send</span>=Submit</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="源码-1"><a href="#源码-1" class="headerlink" title="源码"></a>源码</h2><p>medium.php源码如下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br><span class="hljs-variable">$page</span>[ <span class="hljs-string">&#x27;body&#x27;</span> ] .= <span class="hljs-string">&lt;&lt;&lt;EOF</span><br><span class="hljs-string">&lt;script src=&quot;/vulnerabilities/javascript/source/medium.js&quot;&gt;&lt;/script&gt;</span><br><span class="hljs-string">EOF</span>;<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>生成token的函数在medium.js中，源码如下</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">do_something</span>(<span class="hljs-params">e</span>)<br>&#123;<br>    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> t=<span class="hljs-string">&quot;&quot;</span>,n=e.<span class="hljs-property">length</span>-<span class="hljs-number">1</span>;n&gt;=<span class="hljs-number">0</span>;n--)t+=e[n];<br>    <span class="hljs-keyword">return</span> t<br>&#125;<br><span class="hljs-built_in">setTimeout</span>(<span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)&#123;<span class="hljs-title function_">do_elsesomething</span>(<span class="hljs-string">&quot;XX&quot;</span>)&#125;,<span class="hljs-number">300</span>);<br><span class="hljs-keyword">function</span> <span class="hljs-title function_">do_elsesomething</span>(<span class="hljs-params">e</span>)&#123;<br>    <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;token&quot;</span>).<span class="hljs-property">value</span>=<span class="hljs-title function_">do_something</span>(e+<span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;phrase&quot;</span>).<span class="hljs-property">value</span>+<span class="hljs-string">&quot;XX&quot;</span>)<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<h2 id="攻击思路-1"><a href="#攻击思路-1" class="headerlink" title="攻击思路"></a>攻击思路</h2><ol>
+<li>更改phrase输入框 <code>success</code></li>
+<li>还是控制台，<code>setTimeout(function()&#123;do_elsesomething(&quot;XX&quot;)&#125;,300)</code></li>
+<li>点击 <code>submit</code></li>
+</ol>
+<h1 id="high"><a href="#high" class="headerlink" title="high"></a>high</h1><h2 id="源码-2"><a href="#源码-2" class="headerlink" title="源码"></a>源码</h2><p>high.php源码如下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs php"><br><span class="hljs-meta">&lt;?php</span><br><span class="hljs-variable">$page</span>[ <span class="hljs-string">&#x27;body&#x27;</span> ] .= <span class="hljs-string">&lt;&lt;&lt;EOF</span><br><span class="hljs-string">&lt;script src=&quot;/vulnerabilities/javascript/source/high.js&quot;&gt;&lt;/script&gt;</span><br><span class="hljs-string">EOF</span>;<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>high.js源码如下,运用了js混淆技术。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">var</span> a=[<span class="hljs-string">&#x27;fromCharCode&#x27;</span>,<span class="hljs-string">&#x27;toString&#x27;</span>,<span class="hljs-string">&#x27;replace&#x27;</span>,<span class="hljs-string">&#x27;BeJ&#x27;</span>,<span class="hljs-string">&#x27;\x5cw+&#x27;</span>,<span class="hljs-string">&#x27;Lyg&#x27;</span>,<span class="hljs-string">&#x27;SuR&#x27;</span>,<span class="hljs-string">&#x27;(w()&#123;\x273M\x203L\x27;q\x201l=\x273K\x203I\x203J\x20T\x27;q\x201R=1c\x202I===\x271n\x27;q\x20Y=1R?2I:&#123;&#125;;p(Y.3N)&#123;1R=1O&#125;q\x202L=!1R&amp;&amp;1c\x202M===\x271n\x27;q\x202o=!Y.2S&amp;&amp;1c\x202d===\x271n\x27&amp;&amp;2d.2Q&amp;&amp;2d.2Q.3S;p(2o)&#123;Y=3R&#125;z\x20p(2L)&#123;Y=2M&#125;q\x202G=!Y.3Q&amp;&amp;1c\x202g===\x271n\x27&amp;&amp;2g.X;q\x202s=1c\x202l===\x27w\x27&amp;&amp;2l.3P;q\x201y=!Y.3H&amp;&amp;1c\x20Z!==\x272T\x27;q\x20m=\x273G\x27.3z(\x27\x27);q\x202w=[-3y,3x,3v,3w];q\x20U=[24,16,8,0];q\x20K=[3A,3B,3F,3E,3D,3C,3T,3U,4d,4c,4b,49,4a,4e,4f,4j,4i,4h,3u,48,47,3Z,3Y,3X,3V,3W,40,41,46,45,43,42,4k,3f,38,36,39,37,34,33,2Y,31,2Z,35,3t,3n,3m,3l,3o,3p,3s,3r,3q,3k,3j,3d,3a,3c,3b,3e,3h,3g,3i,4g];q\x201E=[\x271e\x27,\x2727\x27,\x271G\x27,\x272R\x27];q\x20l=[];p(Y.2S||!1z.1K)&#123;1z.1K=w(1x)&#123;A\x204C.Q.2U.1I(1x)===\x27[1n\x201z]\x27&#125;&#125;p(1y&amp;&amp;(Y.50||!Z.1N))&#123;Z.1N=w(1x)&#123;A\x201c\x201x===\x271n\x27&amp;&amp;1x.1w&amp;&amp;1x.1w.1J===Z&#125;&#125;q\x202m=w(1X,x)&#123;A\x20w(s)&#123;A\x20O\x20N(x,1d).S(s)[1X]()&#125;&#125;;q\x202a=w(x)&#123;q\x20P=2m(\x271e\x27,x);p(2o)&#123;P=2P(P,x)&#125;P.1T=w()&#123;A\x20O\x20N(x)&#125;;P.S=w(s)&#123;A\x20P.1T().S(s)&#125;;1g(q\x20i=0;i&lt;1E.W;++i)&#123;q\x20T=1E[i];P[T]=2m(T,x)&#125;A\x20P&#125;;q\x202P=w(P,x)&#123;q\x201S=2O(\x222N(\x271S\x27)\x22);q\x201Y=2O(\x222N(\x271w\x27).1Y\x22);q\x202n=x?\x271H\x27:\x271q\x27;q\x202z=w(s)&#123;p(1c\x20s===\x272p\x27)&#123;A\x201S.2x(2n).S(s,\x274S\x27).1G(\x271e\x27)&#125;z&#123;p(s===2q||s===2T)&#123;1u\x20O\x201t(1l)&#125;z\x20p(s.1J===Z)&#123;s=O\x202r(s)&#125;&#125;p(1z.1K(s)||Z.1N(s)||s.1J===1Y)&#123;A\x201S.2x(2n).S(O\x201Y(s)).1G(\x271e\x27)&#125;z&#123;A\x20P(s)&#125;&#125;;A\x202z&#125;;q\x202k=w(1X,x)&#123;A\x20w(G,s)&#123;A\x20O\x201P(G,x,1d).S(s)[1X]()&#125;&#125;;q\x202f=w(x)&#123;q\x20P=2k(\x271e\x27,x);P.1T=w(G)&#123;A\x20O\x201P(G,x)&#125;;P.S=w(G,s)&#123;A\x20P.1T(G).S(s)&#125;;1g(q\x20i=0;i&lt;1E.W;++i)&#123;q\x20T=1E[i];P[T]=2k(T,x)&#125;A\x20P&#125;;w\x20N(x,1v)&#123;p(1v)&#123;l[0]=l[16]=l[1]=l[2]=l[3]=l[4]=l[5]=l[6]=l[7]=l[8]=l[9]=l[10]=l[11]=l[12]=l[13]=l[14]=l[15]=0;k.l=l&#125;z&#123;k.l=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]&#125;p(x)&#123;k.C=4I;k.B=4H;k.E=4l;k.F=4U;k.J=4J;k.I=4K;k.H=4L;k.D=4T&#125;z&#123;k.C=4X;k.B=4W;k.E=4Y;k.F=4Z;k.J=4V;k.I=4O;k.H=4F;k.D=4s&#125;k.1C=k.1A=k.L=k.2i=0;k.1U=k.1L=1O;k.2j=1d;k.x=x&#125;N.Q.S=w(s)&#123;p(k.1U)&#123;A&#125;q\x202h,T=1c\x20s;p(T!==\x272p\x27)&#123;p(T===\x271n\x27)&#123;p(s===2q)&#123;1u\x20O\x201t(1l)&#125;z\x20p(1y&amp;&amp;s.1J===Z)&#123;s=O\x202r(s)&#125;z\x20p(!1z.1K(s))&#123;p(!1y||!Z.1N(s))&#123;1u\x20O\x201t(1l)&#125;&#125;&#125;z&#123;1u\x20O\x201t(1l)&#125;2h=1d&#125;q\x20r,M=0,i,W=s.W,l=k.l;4t(M&lt;W)&#123;p(k.1L)&#123;k.1L=1O;l[0]=k.1C;l[16]=l[1]=l[2]=l[3]=l[4]=l[5]=l[6]=l[7]=l[8]=l[9]=l[10]=l[11]=l[12]=l[13]=l[14]=l[15]=0&#125;p(2h)&#123;1g(i=k.1A;M&lt;W&amp;&amp;i&lt;1k;++M)&#123;l[i&gt;&gt;2]|=s[M]&lt;&lt;U[i++&amp;3]&#125;&#125;z&#123;1g(i=k.1A;M&lt;W&amp;&amp;i&lt;1k;++M)&#123;r=s.1Q(M);p(r&lt;R)&#123;l[i&gt;&gt;2]|=r&lt;&lt;U[i++&amp;3]&#125;z\x20p(r&lt;2v)&#123;l[i&gt;&gt;2]|=(2t|(r&gt;&gt;6))&lt;&lt;U[i++&amp;3];l[i&gt;&gt;2]|=(R|(r&amp;V))&lt;&lt;U[i++&amp;3]&#125;z\x20p(r&lt;2A||r&gt;=2E)&#123;l[i&gt;&gt;2]|=(2D|(r&gt;&gt;12))&lt;&lt;U[i++&amp;3];l[i&gt;&gt;2]|=(R|((r&gt;&gt;6)&amp;V))&lt;&lt;U[i++&amp;3];l[i&gt;&gt;2]|=(R|(r&amp;V))&lt;&lt;U[i++&amp;3]&#125;z&#123;r=2C+(((r&amp;23)&lt;&lt;10)|(s.1Q(++M)&amp;23));l[i&gt;&gt;2]|=(2X|(r&gt;&gt;18))&lt;&lt;U[i++&amp;3];l[i&gt;&gt;2]|=(R|((r&gt;&gt;12)&amp;V))&lt;&lt;U[i++&amp;3];l[i&gt;&gt;2]|=(R|((r&gt;&gt;6)&amp;V))&lt;&lt;U[i++&amp;3];l[i&gt;&gt;2]|=(R|(r&amp;V))&lt;&lt;U[i++&amp;3]&#125;&#125;&#125;k.2u=i;k.L+=i-k.1A;p(i&gt;=1k)&#123;k.1C=l[16];k.1A=i-1k;k.1W();k.1L=1d&#125;z&#123;k.1A=i&#125;&#125;p(k.L&gt;4r)&#123;k.2i+=k.L/2H&lt;&lt;0;k.L=k.L%2H&#125;A\x20k&#125;;N.Q.1s=w()&#123;p(k.1U)&#123;A&#125;k.1U=1d;q\x20l=k.l,i=k.2u;l[16]=k.1C;l[i&gt;&gt;2]|=2w[i&amp;3];k.1C=l[16];p(i&gt;=4q)&#123;p(!k.1L)&#123;k.1W()&#125;l[0]=k.1C;l[16]=l[1]=l[2]=l[3]=l[4]=l[5]=l[6]=l[7]=l[8]=l[9]=l[10]=l[11]=l[12]=l[13]=l[14]=l[15]=0&#125;l[14]=k.2i&lt;&lt;3|k.L&gt;&gt;&gt;29;l[15]=k.L&lt;&lt;3;k.1W()&#125;;N.Q.1W=w()&#123;q\x20a=k.C,b=k.B,c=k.E,d=k.F,e=k.J,f=k.I,g=k.H,h=k.D,l=k.l,j,1a,1b,1j,v,1f,1h,1B,1Z,1V,1D;1g(j=16;j&lt;1k;++j)&#123;v=l[j-15];1a=((v&gt;&gt;&gt;7)|(v&lt;&lt;25))^((v&gt;&gt;&gt;18)|(v&lt;&lt;14))^(v&gt;&gt;&gt;3);v=l[j-2];1b=((v&gt;&gt;&gt;17)|(v&lt;&lt;15))^((v&gt;&gt;&gt;19)|(v&lt;&lt;13))^(v&gt;&gt;&gt;10);l[j]=l[j-16]+1a+l[j-7]+1b&lt;&lt;0&#125;1D=b&amp;c;1g(j=0;j&lt;1k;j+=4)&#123;p(k.2j)&#123;p(k.x)&#123;1B=4m;v=l[0]-4n;h=v-4o&lt;&lt;0;d=v+4p&lt;&lt;0&#125;z&#123;1B=4v;v=l[0]-4w;h=v-4G&lt;&lt;0;d=v+4D&lt;&lt;0&#125;k.2j=1O&#125;z&#123;1a=((a&gt;&gt;&gt;2)|(a&lt;&lt;30))^((a&gt;&gt;&gt;13)|(a&lt;&lt;19))^((a&gt;&gt;&gt;22)|(a&lt;&lt;10));1b=((e&gt;&gt;&gt;6)|(e&lt;&lt;26))^((e&gt;&gt;&gt;11)|(e&lt;&lt;21))^((e&gt;&gt;&gt;25)|(e&lt;&lt;7));1B=a&amp;b;1j=1B^(a&amp;c)^1D;1h=(e&amp;f)^(~e&amp;g);v=h+1b+1h+K[j]+l[j];1f=1a+1j;h=d+v&lt;&lt;0;d=v+1f&lt;&lt;0&#125;1a=((d&gt;&gt;&gt;2)|(d&lt;&lt;30))^((d&gt;&gt;&gt;13)|(d&lt;&lt;19))^((d&gt;&gt;&gt;22)|(d&lt;&lt;10));1b=((h&gt;&gt;&gt;6)|(h&lt;&lt;26))^((h&gt;&gt;&gt;11)|(h&lt;&lt;21))^((h&gt;&gt;&gt;25)|(h&lt;&lt;7));1Z=d&amp;a;1j=1Z^(d&amp;b)^1B;1h=(h&amp;e)^(~h&amp;f);v=g+1b+1h+K[j+1]+l[j+1];1f=1a+1j;g=c+v&lt;&lt;0;c=v+1f&lt;&lt;0;1a=((c&gt;&gt;&gt;2)|(c&lt;&lt;30))^((c&gt;&gt;&gt;13)|(c&lt;&lt;19))^((c&gt;&gt;&gt;22)|(c&lt;&lt;10));1b=((g&gt;&gt;&gt;6)|(g&lt;&lt;26))^((g&gt;&gt;&gt;11)|(g&lt;&lt;21))^((g&gt;&gt;&gt;25)|(g&lt;&lt;7));1V=c&amp;d;1j=1V^(c&amp;a)^1Z;1h=(g&amp;h)^(~g&amp;e);v=f+1b+1h+K[j+2]+l[j+2];1f=1a+1j;f=b+v&lt;&lt;0;b=v+1f&lt;&lt;0;1a=((b&gt;&gt;&gt;2)|(b&lt;&lt;30))^((b&gt;&gt;&gt;13)|(b&lt;&lt;19))^((b&gt;&gt;&gt;22)|(b&lt;&lt;10));1b=((f&gt;&gt;&gt;6)|(f&lt;&lt;26))^((f&gt;&gt;&gt;11)|(f&lt;&lt;21))^((f&gt;&gt;&gt;25)|(f&lt;&lt;7));1D=b&amp;c;1j=1D^(b&amp;d)^1V;1h=(f&amp;g)^(~f&amp;h);v=e+1b+1h+K[j+3]+l[j+3];1f=1a+1j;e=a+v&lt;&lt;0;a=v+1f&lt;&lt;0&#125;k.C=k.C+a&lt;&lt;0;k.B=k.B+b&lt;&lt;0;k.E=k.E+c&lt;&lt;0;k.F=k.F+d&lt;&lt;0;k.J=k.J+e&lt;&lt;0;k.I=k.I+f&lt;&lt;0;k.H=k.H+g&lt;&lt;0;k.D=k.D+h&lt;&lt;0&#125;;N.Q.1e=w()&#123;k.1s();q\x20C=k.C,B=k.B,E=k.E,F=k.F,J=k.J,I=k.I,H=k.H,D=k.D;q\x201e=m[(C&gt;&gt;28)&amp;o]+m[(C&gt;&gt;24)&amp;o]+m[(C&gt;&gt;20)&amp;o]+m[(C&gt;&gt;16)&amp;o]+m[(C&gt;&gt;12)&amp;o]+m[(C&gt;&gt;8)&amp;o]+m[(C&gt;&gt;4)&amp;o]+m[C&amp;o]+m[(B&gt;&gt;28)&amp;o]+m[(B&gt;&gt;24)&amp;o]+m[(B&gt;&gt;20)&amp;o]+m[(B&gt;&gt;16)&amp;o]+m[(B&gt;&gt;12)&amp;o]+m[(B&gt;&gt;8)&amp;o]+m[(B&gt;&gt;4)&amp;o]+m[B&amp;o]+m[(E&gt;&gt;28)&amp;o]+m[(E&gt;&gt;24)&amp;o]+m[(E&gt;&gt;20)&amp;o]+m[(E&gt;&gt;16)&amp;o]+m[(E&gt;&gt;12)&amp;o]+m[(E&gt;&gt;8)&amp;o]+m[(E&gt;&gt;4)&amp;o]+m[E&amp;o]+m[(F&gt;&gt;28)&amp;o]+m[(F&gt;&gt;24)&amp;o]+m[(F&gt;&gt;20)&amp;o]+m[(F&gt;&gt;16)&amp;o]+m[(F&gt;&gt;12)&amp;o]+m[(F&gt;&gt;8)&amp;o]+m[(F&gt;&gt;4)&amp;o]+m[F&amp;o]+m[(J&gt;&gt;28)&amp;o]+m[(J&gt;&gt;24)&amp;o]+m[(J&gt;&gt;20)&amp;o]+m[(J&gt;&gt;16)&amp;o]+m[(J&gt;&gt;12)&amp;o]+m[(J&gt;&gt;8)&amp;o]+m[(J&gt;&gt;4)&amp;o]+m[J&amp;o]+m[(I&gt;&gt;28)&amp;o]+m[(I&gt;&gt;24)&amp;o]+m[(I&gt;&gt;20)&amp;o]+m[(I&gt;&gt;16)&amp;o]+m[(I&gt;&gt;12)&amp;o]+m[(I&gt;&gt;8)&amp;o]+m[(I&gt;&gt;4)&amp;o]+m[I&amp;o]+m[(H&gt;&gt;28)&amp;o]+m[(H&gt;&gt;24)&amp;o]+m[(H&gt;&gt;20)&amp;o]+m[(H&gt;&gt;16)&amp;o]+m[(H&gt;&gt;12)&amp;o]+m[(H&gt;&gt;8)&amp;o]+m[(H&gt;&gt;4)&amp;o]+m[H&amp;o];p(!k.x)&#123;1e+=m[(D&gt;&gt;28)&amp;o]+m[(D&gt;&gt;24)&amp;o]+m[(D&gt;&gt;20)&amp;o]+m[(D&gt;&gt;16)&amp;o]+m[(D&gt;&gt;12)&amp;o]+m[(D&gt;&gt;8)&amp;o]+m[(D&gt;&gt;4)&amp;o]+m[D&amp;o]&#125;A\x201e&#125;;N.Q.2U=N.Q.1e;N.Q.1G=w()&#123;k.1s();q\x20C=k.C,B=k.B,E=k.E,F=k.F,J=k.J,I=k.I,H=k.H,D=k.D;q\x202b=[(C&gt;&gt;24)&amp;u,(C&gt;&gt;16)&amp;u,(C&gt;&gt;8)&amp;uj a v a22,n=e.W-1;n&gt;=0;n--)t+=e[n];A\x20t&#125;w\x202J(t,y=\x224B\x22)&#123;1m.1o(\x221M\x22).1r=1q(1m.1o(\x221M\x22).1r+y)&#125;w\x202B(e=\x224E\x22)&#123;1m.1o(\x221M\x22).1r=1q(e+1m.1o(\x221M\x22).1r)&#125;w\x202K(a,b)&#123;1m.1o(\x221M\x22).1r=2y(1m.1o(\x222F\x22).1r)&#125;1m.1o(\x222F\x22).1r=\x22\x22;4u(w()&#123;2B(\x224M\x22)&#125;,4N);1m.1o(\x224P\x22).4Q(\x224R\x22,2J);2K(\x223O\x22,44);&#x27;</span>,<span class="hljs-string">&#x27;||||||||||||||||||||this|blocks|HEX_CHARS||0x0F|if|var|code|message||0xFF|t1|function|is224||else|return|h1|h0|h7|h2|h3|key|h6|h5|h4||bytes|index|Sha256|new|method|prototype|0x80|update|type|SHIFT|0x3f|length|exports|root|ArrayBuffer|||||||||||s0|s1|typeof|true|hex|t2|for|ch|dataView|maj|64|ERROR|document|object|getElementById|setUint32|sha256|value|finalize|Error|throw|sharedMemory|buffer|obj|ARRAY_BUFFER|Array|start|ab|block|bc|OUTPUT_TYPES|oKeyPad|digest|sha224|call|constructor|isArray|hashed|token|isView|false|HmacSha256|charCodeAt|WINDOW|crypto|create|finalized|cd|hash|outputType|Buffer|da||||0x3ff||||array|||createMethod|arr|inner|process|iKeyPad|createHmacMethod|module|notString|hBytes|first|createHmacOutputMethod|define|createOutputMethod|algorithm|NODE_JS|string|null|Uint8Array|AMD|0xc0|lastByteIndex|0x800|EXTRA|createHash|do_something|nodeMethod|0xd800|token_part_2|0x10000|0xe0|0xe000|phrase|COMMON_JS|4294967296|window|token_part_3|token_part_1|WEB_WORKER|self|require|eval|nodeWrap|versions|arrayBuffer|JS_SHA256_NO_NODE_JS|undefined|toString|hmac|innerHash|0xf0|0xa2bfe8a1|0xc24b8b70||0xa81a664b||0x92722c85|0x81c2c92e|0xc76c51a3|0x53380d13|0x766a0abb|0x4d2c6dfc|0x650a7354|0x748f82ee|0x84c87814|0x78a5636f|0x682e6ff3|0x8cc70208|0x2e1b2138|0xa4506ceb|0x90befffa|0xbef9a3f7|0x5b9cca4f|0x4ed8aa4a|0x106aa070|0xf40e3585|0xd6990624|0x19a4c116|0x1e376c08|0x391c0cb3|0x34b0bcb5|0x2748774c|0xd192e819|0x0fc19dc6|32768|128|8388608|2147483648|split|0x428a2f98|0x71374491|0x59f111f1|0x3956c25b|0xe9b5dba5|0xb5c0fbcf|0123456789abcdef|JS_SHA256_NO_ARRAY_BUFFER|is|invalid|input|strict|use|JS_SHA256_NO_WINDOW|ABCD|amd|JS_SHA256_NO_COMMON_JS|global|node|0x923f82a4|0xab1c5ed5|0x983e5152|0xa831c66d|0x76f988da|0x5cb0a9dc|0x4a7484aa|0xb00327c8|0xbf597fc7|0x14292967|0x06ca6351||0xd5a79147|0xc6e00bf3|0x2de92c6f|0x240ca1cc|0x550c7dc3|0x72be5d74|0x243185be|0x12835b01|0xd807aa98|0x80deb1fe|0x9bdc06a7|0xc67178f2|0xefbe4786|0xe49b69c1|0xc19bf174|0x27b70a85|0x3070dd17|300032|1413257819|150054599|24177077|56|4294967295|0x5be0cd19|while|setTimeout|704751109|210244248|DataView|0x36|0x5c|push|ZZ|Object|143694565|YY|0x1f83d9ab|1521486534|0x367cd507|0xc1059ed8|0xffc00b31|0x68581511|0x64f98fa7|XX|300|0x9b05688c|send|addEventListener|click|utf8|0xbefa4fa4|0xf70e5939|0x510e527f|0xbb67ae85|0x6a09e667|0x3c6ef372|0xa54ff53a|JS_SHA256_NO_ARRAY_BUFFER_IS_VIEW&#x27;</span>,<span class="hljs-string">&#x27;split&#x27;</span>];(<span class="hljs-keyword">function</span>(<span class="hljs-params">c,d</span>)&#123;<span class="hljs-keyword">var</span> e=<span class="hljs-keyword">function</span>(<span class="hljs-params">f</span>)&#123;<span class="hljs-keyword">while</span>(--f)&#123;c[<span class="hljs-string">&#x27;push&#x27;</span>](c[<span class="hljs-string">&#x27;shift&#x27;</span>]());&#125;&#125;;<span class="hljs-title function_">e</span>(++d);&#125;(a,<span class="hljs-number">0x1f4</span>));<span class="hljs-keyword">var</span> b=<span class="hljs-keyword">function</span>(<span class="hljs-params">c,d</span>)&#123;c=c-<span class="hljs-number">0x0</span>;<span class="hljs-keyword">var</span> e=a[c];<span class="hljs-keyword">return</span> e;&#125;;<span class="hljs-built_in">eval</span>(<span class="hljs-keyword">function</span>(<span class="hljs-params">d,e,f,g,h,i</span>)&#123;h=<span class="hljs-keyword">function</span>(<span class="hljs-params">j</span>)&#123;<span class="hljs-keyword">return</span>(j&lt;e?<span class="hljs-string">&#x27;&#x27;</span>:<span class="hljs-title function_">h</span>(<span class="hljs-built_in">parseInt</span>(j/e)))+((j=j%e)&gt;<span class="hljs-number">0x23</span>?<span class="hljs-title class_">String</span>[<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x0&#x27;</span>)](j+<span class="hljs-number">0x1d</span>):j[<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x1&#x27;</span>)](<span class="hljs-number">0x24</span>));&#125;;<span class="hljs-keyword">if</span>(!<span class="hljs-string">&#x27;&#x27;</span>[<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x2&#x27;</span>)](<span class="hljs-regexp">/^/</span>,<span class="hljs-title class_">String</span>))&#123;<span class="hljs-keyword">while</span>(f--)&#123;i[<span class="hljs-title function_">h</span>(f)]=g[f]||<span class="hljs-title function_">h</span>(f);&#125;g=[<span class="hljs-keyword">function</span>(<span class="hljs-params">k</span>)&#123;<span class="hljs-keyword">if</span>(<span class="hljs-string">&#x27;wpA&#x27;</span>!==<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x3&#x27;</span>))&#123;<span class="hljs-keyword">return</span> i[k];&#125;<span class="hljs-keyword">else</span>&#123;<span class="hljs-keyword">while</span>(f--)&#123;i[<span class="hljs-title function_">k</span>(f)]=g[f]||<span class="hljs-title function_">k</span>(f);&#125;g=[<span class="hljs-keyword">function</span>(<span class="hljs-params">l</span>)&#123;<span class="hljs-keyword">return</span> i[l];&#125;];k=<span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)&#123;<span class="hljs-keyword">return</span> <span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x4&#x27;</span>);&#125;;f=<span class="hljs-number">0x1</span>;&#125;&#125;];h=<span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)&#123;<span class="hljs-keyword">return</span> <span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x4&#x27;</span>);&#125;;f=<span class="hljs-number">0x1</span>;&#125;;<span class="hljs-keyword">while</span>(f--)&#123;<span class="hljs-keyword">if</span>(g[f])&#123;<span class="hljs-keyword">if</span>(<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x5&#x27;</span>)===<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x6&#x27;</span>))&#123;<span class="hljs-keyword">return</span> i[h];&#125;<span class="hljs-keyword">else</span>&#123;d=d[<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x2&#x27;</span>)](<span class="hljs-keyword">new</span> <span class="hljs-title class_">RegExp</span>(<span class="hljs-string">&#x27;\x5cb&#x27;</span>+<span class="hljs-title function_">h</span>(f)+<span class="hljs-string">&#x27;\x5cb&#x27;</span>,<span class="hljs-string">&#x27;g&#x27;</span>),g[f]);&#125;&#125;&#125;<span class="hljs-keyword">return</span> d;&#125;(<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x7&#x27;</span>),<span class="hljs-number">0x3e</span>,<span class="hljs-number">0x137</span>,<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x8&#x27;</span>)[<span class="hljs-title function_">b</span>(<span class="hljs-string">&#x27;0x9&#x27;</span>)](<span class="hljs-string">&#x27;|&#x27;</span>),<span class="hljs-number">0x0</span>,&#123;&#125;));<br><br></code></pre></td></tr></table></figure>
+
+<p>尝试进行js反混淆，得到反混淆的js。反混淆工具 <code>http://deobfuscatejavascript.com/#</code></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">token_part_3</span>(<span class="hljs-params">t, y = <span class="hljs-string">&quot;ZZ&quot;</span></span>) &#123;<br>    <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;token&quot;</span>).<span class="hljs-property">value</span> = <span class="hljs-title function_">sha256</span>(<span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;token&quot;</span>).<span class="hljs-property">value</span> + y)<br>&#125;<br><span class="hljs-keyword">function</span> <span class="hljs-title function_">token_part_2</span>(<span class="hljs-params">e = <span class="hljs-string">&quot;YY&quot;</span></span>) &#123;<br>    <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;token&quot;</span>).<span class="hljs-property">value</span> = <span class="hljs-title function_">sha256</span>(e + <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;token&quot;</span>).<span class="hljs-property">value</span>)<br>&#125;<br><span class="hljs-keyword">function</span> <span class="hljs-title function_">token_part_1</span>(<span class="hljs-params">a, b</span>) &#123;<br>    <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;token&quot;</span>).<span class="hljs-property">value</span> = <span class="hljs-title function_">do_something</span>(<span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;phrase&quot;</span>).<span class="hljs-property">value</span>)<br>&#125;<br><span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;phrase&quot;</span>).<span class="hljs-property">value</span> = <span class="hljs-string">&quot;&quot;</span>;<br><span class="hljs-built_in">setTimeout</span>(<span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) &#123;<br>    <span class="hljs-title function_">token_part_2</span>(<span class="hljs-string">&quot;XX&quot;</span>)<br>&#125;, <span class="hljs-number">300</span>);<br><span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&quot;send&quot;</span>).<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">&quot;click&quot;</span>, token_part_3);<br><span class="hljs-title function_">token_part_1</span>(<span class="hljs-string">&quot;ABCD&quot;</span>, <span class="hljs-number">44</span>);<br></code></pre></td></tr></table></figure>
+
+<p>index.php中high级别源码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;high&#x27;</span>:<br>    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$token</span> == <span class="hljs-title function_ invoke__">hash</span>(<span class="hljs-string">&quot;sha256&quot;</span>, <span class="hljs-title function_ invoke__">hash</span>(<span class="hljs-string">&quot;sha256&quot;</span>, <span class="hljs-string">&quot;XX&quot;</span> . <span class="hljs-title function_ invoke__">strrev</span>(<span class="hljs-string">&quot;success&quot;</span>)) . <span class="hljs-string">&quot;ZZ&quot;</span>)) &#123;<br>        <span class="hljs-variable">$message</span> = <span class="hljs-string">&quot;&lt;p style=&#x27;color:red&#x27;&gt;Well done!&lt;/p&gt;&quot;</span>;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-variable">$message</span> = <span class="hljs-string">&quot;&lt;p&gt;Invalid token.&lt;/p&gt;&quot;</span>;<br>    &#125;<br>    <span class="hljs-keyword">break</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="攻击思路-2"><a href="#攻击思路-2" class="headerlink" title="攻击思路"></a>攻击思路</h2><h3 id="代码执行顺序"><a href="#代码执行顺序" class="headerlink" title="代码执行顺序"></a>代码执行顺序</h3><ol>
+<li><p><code>setTimeout(function() &#123;token_part_2(&quot;XX&quot;)&#125;, 300);</code></p>
+</li>
+<li><p> <code>document.getElementById(&quot;send&quot;).addEventListener(&quot;click&quot;, token_part_3)</code></p>
+</li>
+<li><p> <code>token_part_1(&quot;ABCD&quot;, 44)</code></p>
+</li>
+</ol>
+<h3 id="由于setTimeout-延时执行函数和addEventListener-函数，函数实际执行顺序"><a href="#由于setTimeout-延时执行函数和addEventListener-函数，函数实际执行顺序" class="headerlink" title="由于setTimeout()延时执行函数和addEventListener()函数，函数实际执行顺序"></a>由于setTimeout()延时执行函数和addEventListener()函数，函数实际执行顺序</h3><ol>
+<li><p> <code>token_part_1(&quot;ABCD&quot;, 44)</code></p>
+</li>
+<li><p><code>token_part_2(&quot;XX&quot;)</code></p>
+</li>
+<li><p><code>token_part_3()</code></p>
+</li>
+</ol>
+<h4 id="所以我们最终的攻击顺序为"><a href="#所以我们最终的攻击顺序为" class="headerlink" title="所以我们最终的攻击顺序为"></a>所以我们最终的攻击顺序为</h4><ol>
+<li><p>phrase输入框 <code>success</code></p>
+</li>
+<li><p><code>token_part_1(&quot;ABCD&quot;, 44)</code></p>
+</li>
+<li><p><code>token_part_2(&quot;XX&quot;)</code></p>
+</li>
+<li><p>点击submit按钮</p>
+</li>
+</ol>
+<h1 id="impossible"><a href="#impossible" class="headerlink" title="impossible"></a>impossible</h1><h2 id="请求页面-1"><a href="#请求页面-1" class="headerlink" title="请求页面"></a>请求页面</h2><p><img src="/2022/06/07/dvwa-JS-attack/1692531590407.png" srcset="/img/loading.gif" lazyload alt="1692531590407"></p>
+<h2 id="源码-3"><a href="#源码-3" class="headerlink" title="源码"></a>源码</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs php"><br></code></pre></td></tr></table></figure>
+<p>没看错吧，impossible级别不存在源码。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>据我观察，Javascript攻击本质上也是一种注入，发生在客户端浏览器。impossible? no impossible!<br><em><strong>You can never trust anything that comes from the user or prevent them from messing with it and so there is no impossible level.</strong></em></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/" class="category-chain-item">渗透测试</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/%E9%9D%B6%E5%9C%BA/" class="category-chain-item">靶场</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/XSS-JS-attack/" class="print-no-link">#XSS-JS-attack</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>dvwa-JS-attack</div>
+      <div>http://blog.lingyuanming.site/2022/06/07/dvwa-JS-attack/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>LYM</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年6月7日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/07/01/%E6%B5%8F%E8%A7%88%E5%99%A8%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88/" title="浏览器做了什么">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">浏览器做了什么</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/06/06/dvwa-XSS-DOM/" title="dvwa-XSS-DOM">
+                        <span class="hidden-mobile">dvwa-XSS-DOM</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      豫ICP备2022024455
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

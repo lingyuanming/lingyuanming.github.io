@@ -1,0 +1,734 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="LYM">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="开始 Damn Vulnerable Web Application (DVWA)(译注：可以直译为：”该死的”不安全Web应用程序)，是一个编码差的、易受攻击的 PHP&#x2F;MySQL Web应用程序。 它的主要目的是帮助信息安全专业人员在合法的环境中，练习技能和测试工具，帮助 Web 开发人员更好地了解如何加强 Web 应用程序的安全性，并帮助学生和教师在可控的教学环境中了解和学习 Web 安全技">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DVWA靶场部署">
+<meta property="og:url" content="http://blog.lingyuanming.site/2022/06/02/dvwa-field-build/index.html">
+<meta property="og:site_name" content="LYM的博客">
+<meta property="og:description" content="开始 Damn Vulnerable Web Application (DVWA)(译注：可以直译为：”该死的”不安全Web应用程序)，是一个编码差的、易受攻击的 PHP&#x2F;MySQL Web应用程序。 它的主要目的是帮助信息安全专业人员在合法的环境中，练习技能和测试工具，帮助 Web 开发人员更好地了解如何加强 Web 应用程序的安全性，并帮助学生和教师在可控的教学环境中了解和学习 Web 安全技">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/02/dvwa-field-build/1691609465611.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/02/dvwa-field-build/1692265581869.png">
+<meta property="article:published_time" content="2022-06-02T02:10:10.000Z">
+<meta property="article:modified_time" content="2022-06-02T02:10:10.000Z">
+<meta property="article:author" content="LYM">
+<meta property="article:tag" content="工具部署">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://blog.lingyuanming.site/2022/06/02/dvwa-field-build/1691609465611.png">
+  
+  
+  
+  <title>DVWA靶场部署 - LYM的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.lingyuanming.site","root":"/","version":"1.9.5","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>LYM</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="DVWA靶场部署"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        LYM
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-06-02 10:10" pubdate>
+          2022年6月2日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          29 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">DVWA靶场部署</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h1><blockquote>
+<p>Damn Vulnerable Web Application (DVWA)(译注：可以直译为：”该死的”不安全Web应用程序)，是一个编码差的、易受攻击的 PHP/MySQL Web应用程序。 它的主要目的是帮助信息安全专业人员在合法的环境中，练习技能和测试工具，帮助 Web 开发人员更好地了解如何加强 Web 应用程序的安全性，并帮助学生和教师在可控的教学环境中了解和学习 Web 安全技术。</p>
+</blockquote>
+<blockquote>
+<p>DVWA的目的是通过简单明了的界面来练习一些最常见的 Web 漏洞，所练习的漏洞具有不同的难度级别。 请注意，此软件存在提示和无提示的漏洞。 这是特意为止。 我们鼓励您依靠自己的能力尝试并发现尽可能多的安全问题。</p>
+</blockquote>
+<h1 id="安装方式1（编译docker镜像）"><a href="#安装方式1（编译docker镜像）" class="headerlink" title="安装方式1（编译docker镜像）"></a>安装方式1（编译docker镜像）</h1><p><em><strong>注意通过此方式，需要更新docker软件包,或者docker compose命令换成docker-compose命令。并且编译的DVWA版本是最新的版本，当前为2.3版本</strong></em></p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/digininja/DVWA/">https://github.com/digininja/DVWA/</a></p>
+</blockquote>
+<p>It is possible to run DVWA with containers.</p>
+<p>Prerequisites: Docker and Docker Compose.</p>
+<ul>
+<li>If you are using Docker Desktop, both of these should be already installed.</li>
+<li>If you prefer Docker Engine on Linux, make sure to follow their <a target="_blank" rel="noopener" href="https://docs.docker.com/engine/install/#server">installation guide</a>.</li>
+</ul>
+<p><strong>We provide support for the latest Docker release as shown above.</strong><br>If you are using Linux and the Docker package that came with your package manager, it will probably work too, but support will only be best-effort.</p>
+<p>Upgrading Docker from the package manager version to upstream requires that you uninstall the old versions as seen in their manuals for <a target="_blank" rel="noopener" href="https://docs.docker.com/engine/install/ubuntu/#uninstall-old-versions">Ubuntu</a>, <a target="_blank" rel="noopener" href="https://docs.docker.com/engine/install/fedora/#uninstall-old-versions">Fedora</a> and others.<br>Your Docker data (containers, images, volumes, etc.) should not be affected, but in case you do run into a problem, make sure to <a target="_blank" rel="noopener" href="https://www.docker.com/support">tell Docker</a> and use search engines in the mean time.</p>
+<p>Then, to get started:</p>
+<ol>
+<li><p>Run <code>docker version</code> and <code>docker compose version</code> to see if you have Docker and Docker Compose properly installed. You should be able to see the version of Docker in the output.</p>
+<p>For example:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs text">&gt;&gt;&gt; docker version<br>Client:<br> [...]<br> Version:           23.0.5<br> [...]<br><br>Server: Docker Desktop 4.19.0 (106363)<br> Engine:<br>  [...]<br>  Version:          23.0.5<br>  [...]<br><br>&gt;&gt;&gt; docker compose version<br>Docker Compose version v2.17.3<br></code></pre></td></tr></table></figure>
+
+<p>If you don’t see anything or get a command not found error, follow the prerequisites to setup Docker and Docker Compose.</p>
+</li>
+<li><p>Clone or download this repository and extract (see <a href="#download">Download</a>).</p>
+</li>
+<li><p>Open a terminal of your choice and change its working directory to <code>DVWA</code>.</p>
+</li>
+<li><p><code>docker compose up -d</code>.</p>
+</li>
+</ol>
+<p>DVWA is now available at <code>http://localhost:4280</code>.</p>
+<p><strong>Notice that for running DVWA in containers, the web server is listening on port 4280 instead of the usual port of 80.</strong><br>For more information on this decision, see <a href="#i-want-to-run-dvwa-on-a-different-port">I want to run DVWA on a different port</a>.</p>
+<p>需要使用 <code>docker-compose</code>编译镜像，主要用到文件目录下 <code>Dockerfile</code>和 <code>compose.yml</code>文件</p>
+<ul>
+<li>Dockerfile</li>
+</ul>
+<figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs docker"><br><br><br><span class="hljs-keyword">FROM</span> docker.io/library/php:<span class="hljs-number">8</span>-apache<br><span class="hljs-keyword">WORKDIR</span><span class="language-bash"> /var/www/html</span><br><br><span class="hljs-comment"># https://www.php.net/manual/en/image.installation.php</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> apt-get update \</span><br><span class="language-bash"> &amp;&amp; apt-get install -y zlib1g-dev libpng-dev libjpeg-dev libfreetype6-dev \</span><br><span class="language-bash"> &amp;&amp; <span class="hljs-built_in">rm</span> -rf /var/lib/apt/lists/* \</span><br><span class="language-bash"> &amp;&amp; docker-php-ext-configure gd --with-jpeg --with-freetype \</span><br><span class="language-bash"> <span class="hljs-comment"># Use pdo_sqlite instead of pdo_mysql if you want to use sqlite</span></span><br> &amp;&amp; docker-php-ext-install gd mysqli pdo pdo_mysql<br><br><span class="hljs-keyword">COPY</span><span class="language-bash"> --<span class="hljs-built_in">chown</span>=www-data:www-data . .</span><br><span class="hljs-keyword">COPY</span><span class="language-bash"> --<span class="hljs-built_in">chown</span>=www-data:www-data config/config.inc.php.dist config/config.inc.php</span><br><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>compose.yml</li>
+</ul>
+<figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs docker">volumes:<br>  dvwa:<br><br><br>networks:<br>  dvwa:<br><br><br>services:<br>  dvwa:<br>    build: .<br>    environment:<br>      - DB_SERVER=db<br>    depends_on:<br>      - db<br>    networks:<br>      - dvwa<br>    ports:<br>      - <span class="hljs-number">4280</span>:<span class="hljs-number">80</span><br>    restart: unless-stopped<br><br>  db:<br>    image: docker.io/library/mariadb:<span class="hljs-number">10</span><br>    environment:<br>      - MYSQL_ROOT_PASSWORD=dvwa<br>      - MYSQL_DATABASE=dvwa<br>      - MYSQL_USER=dvwa<br>      - MYSQL_PASSWORD=p@ssw0rd<br>    volumes:<br>      - dvwa:/var/lib/mysql<br>    networks:<br>      - dvwa<br>    restart: unless-stopped<br><br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><code>docker-compose</code>编译完成后会 <code>php</code>,<code>mariadb</code>,<code>dvwa</code>三个镜像,并且执行 <code>docker-compose up -d</code>后php会端口映射在4280端口，可以通过 <code>http://127.0.0.1:4280</code>访问</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">docker images</span>   <br>REPOSITORY             TAG        IMAGE ID       CREATED       SIZE<br>dvwa-23_dvwa           latest     dab5ed4ddfb9   5 days ago    513MB<br>php                    8-apache   8bb6f2dcced5   12 days ago   503MB<br>mariadb                10         c8b77d250201   5 weeks ago   403MB<br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li><p>默认账户为 <code>admin:password</code>,最终登录后主页如图所示</p>
+<p><img src="/2022/06/02/dvwa-field-build/1691609465611.png" srcset="/img/loading.gif" lazyload alt="dvwa首页"></p>
+</li>
+</ol>
+<h1 id="安装方式2（直接拉取镜像）"><a href="#安装方式2（直接拉取镜像）" class="headerlink" title="安装方式2（直接拉取镜像）"></a>安装方式2（直接拉取镜像）</h1><p><em><strong>注意此方式安装的DVW版本和上面的并不一样，以我的为例,dvwa是1.1版本</strong></em></p>
+<ol>
+<li><code>docker pull vulnerables/web-dvwa</code></li>
+<li><code>docker run -d --name dvwa -p 8080:80 vulnerables/webdvwa</code></li>
+<li>访问浏览器 <code>127.0.0.1:8080</code>,默认账户名密码为 <code>admin:password</code><br><img src="/2022/06/02/dvwa-field-build/1692265581869.png" srcset="/img/loading.gif" lazyload alt="1692265581869"></li>
+</ol>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在接来的靶场实验中，我们使用上面任意一种都可以，每一关卡的源码几乎一致，有些许差别，不过不影响我们的实验。为了前后一致，我先</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/" class="category-chain-item">渗透测试</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/%E9%9D%B6%E5%9C%BA/" class="category-chain-item">靶场</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%B7%A5%E5%85%B7%E9%83%A8%E7%BD%B2/" class="print-no-link">#工具部署</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>DVWA靶场部署</div>
+      <div>http://blog.lingyuanming.site/2022/06/02/dvwa-field-build/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>LYM</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年6月2日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/06/03/dvwa-brute-force/" title="dvwa-brute-force">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">dvwa-brute-force</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/06/01/git-object/" title="Git 内部原理图解——对象、分支以及如何从零开始建仓库">
+                        <span class="hidden-mobile">Git 内部原理图解——对象、分支以及如何从零开始建仓库</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      豫ICP备2022024455
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,819 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="LYM">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="当攻击者执行 SQL 注入攻击时，服务器有时会响应来自数据库服务器的错误消息，报告 SQL 查询的语法不正确。SQL 盲注入与普通 SQL 注入相同，只是当攻击者试图利用应用程序进行攻击时，得到的不是有用的报错信息，而是开发人员指定的通用页面。这使得利用 SQL 注入攻击变得更加困难，但这并非是不可能的。攻击者仍然可以通过 SQL 语句询问一系列真假问题，并监视 web 应用程序的响应来窃取数据">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL-injection-blind">
+<meta property="og:url" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection-blind/index.html">
+<meta property="og:site_name" content="LYM的博客">
+<meta property="og:description" content="当攻击者执行 SQL 注入攻击时，服务器有时会响应来自数据库服务器的错误消息，报告 SQL 查询的语法不正确。SQL 盲注入与普通 SQL 注入相同，只是当攻击者试图利用应用程序进行攻击时，得到的不是有用的报错信息，而是开发人员指定的通用页面。这使得利用 SQL 注入攻击变得更加困难，但这并非是不可能的。攻击者仍然可以通过 SQL 语句询问一系列真假问题，并监视 web 应用程序的响应来窃取数据">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection-blind/1692261151176.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection-blind/1692261278132.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection-blind/1692283885330.png">
+<meta property="article:published_time" content="2022-06-05T03:11:11.000Z">
+<meta property="article:modified_time" content="2022-06-05T03:11:11.000Z">
+<meta property="article:author" content="LYM">
+<meta property="article:tag" content="SQL盲注">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection-blind/1692261151176.png">
+  
+  
+  
+  <title>SQL-injection-blind - LYM的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.lingyuanming.site","root":"/","version":"1.9.5","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>LYM</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="SQL-injection-blind"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        LYM
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-06-05 11:11" pubdate>
+          2022年6月5日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          64 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">SQL-injection-blind</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>当攻击者执行 SQL 注入攻击时，服务器有时会响应来自数据库服务器的错误消息，报告 SQL 查询的语法不正确。SQL 盲注入与普通 SQL 注入相同，只是当攻击者试图利用应用程序进行攻击时，得到的不是有用的报错信息，而是开发人员指定的通用页面。这使得利用 SQL 注入攻击变得更加困难，但这并非是不可能的。攻击者仍然可以通过 SQL 语句询问一系列真假问题，并监视 web 应用程序的响应来窃取数据。</p>
+</blockquote>
+<blockquote>
+<ol>
+<li>布尔盲注：顾名思义就是基于布尔运算特性的盲注，布尔盲注语句需要在涉及判断的功能才能使用，其中最常见的就是在查询条件的位置，分别拼接上一段结果为真和结果为假的判断语句，如果结果为真时显示效果与原来一致，结果为假时查询不到数据或与原来数据不一直，则认为存在布尔盲注。</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol start="2">
+<li>时间盲注：同样也就是基于时间运算特性的盲注，时间盲注主要是对没有涉及判断的功能，如插入、更新等语句的数据为止（而非条件语句的位置），或者布尔盲注没有结果的类型（如显示均为正常或均为异常），可以尝试使用延迟注入进行测试，如果插入时间型盲注语句后服务器延迟响应，则可以认为存在SQL注入漏洞。</li>
+</ol>
+</blockquote>
+<h1 id="low"><a href="#low" class="headerlink" title="low"></a>low</h1><h2 id="请求页面"><a href="#请求页面" class="headerlink" title="请求页面"></a>请求页面</h2><p><img src="/2022/06/05/dvwa-SQL-injection-blind/1692261151176.png" srcset="/img/loading.gif" lazyload alt="1692261151176"></p>
+<h2 id="http请求"><a href="#http请求" class="headerlink" title="http请求"></a>http请求</h2><p>输入 <code>1</code>，先看看情况</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/vulnerabilities/sqli_blind/?id=1&amp;Submit=Submit</span> <span class="hljs-meta">HTTP/1.1</span><br><span class="hljs-attribute">Host</span><span class="hljs-punctuation">: </span>localhost:4280<br><span class="hljs-attribute">sec-ch-ua</span><span class="hljs-punctuation">: </span><br><span class="hljs-attribute">sec-ch-ua-mobile</span><span class="hljs-punctuation">: </span>?0<br><span class="hljs-attribute">sec-ch-ua-platform</span><span class="hljs-punctuation">: </span>&quot;&quot;<br><span class="hljs-attribute">Upgrade-Insecure-Requests</span><span class="hljs-punctuation">: </span>1<br><span class="hljs-attribute">User-Agent</span><span class="hljs-punctuation">: </span>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36<br><span class="hljs-attribute">Accept</span><span class="hljs-punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7<br><span class="hljs-attribute">Sec-Fetch-Site</span><span class="hljs-punctuation">: </span>same-origin<br><span class="hljs-attribute">Sec-Fetch-Mode</span><span class="hljs-punctuation">: </span>navigate<br><span class="hljs-attribute">Sec-Fetch-User</span><span class="hljs-punctuation">: </span>?1<br><span class="hljs-attribute">Sec-Fetch-Dest</span><span class="hljs-punctuation">: </span>document<br><span class="hljs-attribute">Referer</span><span class="hljs-punctuation">: </span>http://localhost:4280/vulnerabilities/sqli_blind/<br><span class="hljs-attribute">Accept-Encoding</span><span class="hljs-punctuation">: </span>gzip, deflate<br><span class="hljs-attribute">Accept-Language</span><span class="hljs-punctuation">: </span>zh-CN,zh;q=0.9<br><span class="hljs-attribute">Cookie</span><span class="hljs-punctuation">: </span>PHPSESSID=56b6259296256464a178e043c6597894; security=low<br><span class="hljs-attribute">Connection</span><span class="hljs-punctuation">: </span>close<br><br></code></pre></td></tr></table></figure>
+
+<h2 id="响应页面"><a href="#响应页面" class="headerlink" title="响应页面"></a>响应页面</h2><p><img src="/2022/06/05/dvwa-SQL-injection-blind/1692261278132.png" srcset="/img/loading.gif" lazyload alt="1692261278132"></p>
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs php">&lt;<span class="hljs-meta">&lt;?php</span><br><br><span class="hljs-keyword">if</span>( <span class="hljs-keyword">isset</span>( <span class="hljs-variable">$_GET</span>[ <span class="hljs-string">&#x27;Submit&#x27;</span> ] ) ) &#123;<br>    <span class="hljs-comment">// Get input</span><br>    <span class="hljs-variable">$id</span> = <span class="hljs-variable">$_GET</span>[ <span class="hljs-string">&#x27;id&#x27;</span> ];<br><br>    <span class="hljs-comment">// Check database</span><br>    <span class="hljs-variable">$getid</span>  = <span class="hljs-string">&quot;SELECT first_name, last_name FROM users WHERE user_id = &#x27;<span class="hljs-subst">$id</span>&#x27;;&quot;</span>;<br>    <span class="hljs-variable">$result</span> = <span class="hljs-title function_ invoke__">mysqli_query</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>],  <span class="hljs-variable">$getid</span> ); <span class="hljs-comment">// Removed &#x27;or die&#x27; to suppress mysql errors</span><br><br>    <span class="hljs-comment">// Get results</span><br>    <span class="hljs-variable">$num</span> = @<span class="hljs-title function_ invoke__">mysqli_num_rows</span>( <span class="hljs-variable">$result</span> ); <span class="hljs-comment">// The &#x27;@&#x27; character suppresses errors</span><br>    <span class="hljs-keyword">if</span>( <span class="hljs-variable">$num</span> &gt; <span class="hljs-number">0</span> ) &#123;<br>        <span class="hljs-comment">// Feedback for end user</span><br>        <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;pre&gt;User ID exists in the database.&lt;/pre&gt;&#x27;</span>;<br>    &#125;<br>    <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">// User wasn&#x27;t found, so the page wasn&#x27;t!</span><br>        <span class="hljs-title function_ invoke__">header</span>( <span class="hljs-variable">$_SERVER</span>[ <span class="hljs-string">&#x27;SERVER_PROTOCOL&#x27;</span> ] . <span class="hljs-string">&#x27; 404 Not Found&#x27;</span> );<br><br>        <span class="hljs-comment">// Feedback for end user</span><br>        <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;pre&gt;User ID is MISSING from the database.&lt;/pre&gt;&#x27;</span>;<br>    &#125;<br><br>    ((<span class="hljs-title function_ invoke__">is_null</span>(<span class="hljs-variable">$___mysqli_res</span> = <span class="hljs-title function_ invoke__">mysqli_close</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>]))) ? <span class="hljs-literal">false</span> : <span class="hljs-variable">$___mysqli_res</span>);<br>&#125;<br><br><span class="hljs-meta">?&gt;</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="攻击思路"><a href="#攻击思路" class="headerlink" title="攻击思路"></a>攻击思路</h2><ol>
+<li><p>布尔盲注<br>通过分析源码，可以知道一些重要的信息，比如说这是数值型注入并且页面会有2种显。二分法分万物哈哈哈哈哈。</p>
+<ol>
+<li><p>判断注入类型，结果数值型</p>
+<ul>
+<li>输入 <code>1</code>，返回 <code>User ID exists in the database.</code></li>
+<li>输入 <code>1‘</code>，返回 <code>User ID is MISSING from the database.</code></li>
+</ul>
+</li>
+<li><p>判断回显。只有以上两种回显。</p>
+</li>
+<li><p>获取其他信息。运用布尔盲注或者时间盲注，这里使用布尔盲注比较快捷</p>
+<ul>
+<li><p>获取数据库版本号。最后测试出版本为 <code>10.1.26</code></p>
+<ul>
+<li>判断版本号第1位是否为1,<code>1&#39; and substr(version(),1,1) = &#39;1&#39; #</code></li>
+<li>判断版本号第2位是否为0,<code>1&#39; and substr(version(),2,1) = &#39;0&#39; #</code></li>
+<li>以此类推</li>
+</ul>
+</li>
+<li><p>获取数据路名称。也可以用ASCII码来辅助判断，最后测试出名称为 <code>dvwa</code></p>
+<table>
+<thead>
+<tr>
+<th>字符</th>
+<th>ASCII(十进制)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>a</td>
+<td>97</td>
+</tr>
+<tr>
+<td>A</td>
+<td>65</td>
+</tr>
+<tr>
+<td>0</td>
+<td>48</td>
+</tr>
+<tr>
+<td>_</td>
+<td>95</td>
+</tr>
+<tr>
+<td>z</td>
+<td>122</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>90</td>
+</tr>
+<tr>
+<td>9</td>
+<td>57</td>
+</tr>
+<tr>
+<td>@</td>
+<td>64</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+<pre><code class="hljs">    - 判断数据库名第1位是d,`1&#39;and ascii(substr(database(),1,1))=100 #`
+</code></pre>
+<ol start="2">
+<li>时间盲注(顺序类似布尔盲注)<ul>
+<li>判断数据库版本第1位是1,。<code>1&#39; and if(substr(version(),1,1) = &#39;1&#39; , sleep(3), 1) #</code></li>
+</ul>
+</li>
+</ol>
+<h1 id="medium"><a href="#medium" class="headerlink" title="medium"></a>medium</h1><h2 id="请求页面-1"><a href="#请求页面-1" class="headerlink" title="请求页面"></a>请求页面</h2><p>请求页面变成了下拉选择框，限制用户输入<br><img src="/2022/06/05/dvwa-SQL-injection-blind/1692283885330.png" srcset="/img/loading.gif" lazyload alt="1692283885330"></p>
+<h2 id="http请求-1"><a href="#http请求-1" class="headerlink" title="http请求"></a>http请求</h2><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/vulnerabilities/sqli_blind/</span> <span class="hljs-meta">HTTP/1.1</span><br><span class="hljs-attribute">Host</span><span class="hljs-punctuation">: </span>localhost<br><span class="hljs-attribute">Content-Length</span><span class="hljs-punctuation">: </span>18<br><span class="hljs-attribute">Cache-Control</span><span class="hljs-punctuation">: </span>max-age=0<br><span class="hljs-attribute">sec-ch-ua</span><span class="hljs-punctuation">: </span><br><span class="hljs-attribute">sec-ch-ua-mobile</span><span class="hljs-punctuation">: </span>?0<br><span class="hljs-attribute">sec-ch-ua-platform</span><span class="hljs-punctuation">: </span>&quot;&quot;<br><span class="hljs-attribute">Upgrade-Insecure-Requests</span><span class="hljs-punctuation">: </span>1<br><span class="hljs-attribute">Origin</span><span class="hljs-punctuation">: </span>http://localhost<br><span class="hljs-attribute">Content-Type</span><span class="hljs-punctuation">: </span>application/x-www-form-urlencoded<br><span class="hljs-attribute">User-Agent</span><span class="hljs-punctuation">: </span>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36<br><span class="hljs-attribute">Accept</span><span class="hljs-punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7<br><span class="hljs-attribute">Sec-Fetch-Site</span><span class="hljs-punctuation">: </span>same-origin<br><span class="hljs-attribute">Sec-Fetch-Mode</span><span class="hljs-punctuation">: </span>navigate<br><span class="hljs-attribute">Sec-Fetch-User</span><span class="hljs-punctuation">: </span>?1<br><span class="hljs-attribute">Sec-Fetch-Dest</span><span class="hljs-punctuation">: </span>document<br><span class="hljs-attribute">Referer</span><span class="hljs-punctuation">: </span>http://localhost/vulnerabilities/sqli_blind/<br><span class="hljs-attribute">Accept-Encoding</span><span class="hljs-punctuation">: </span>gzip, deflate<br><span class="hljs-attribute">Accept-Language</span><span class="hljs-punctuation">: </span>zh-CN,zh;q=0.9<br><span class="hljs-attribute">Cookie</span><span class="hljs-punctuation">: </span>PHPSESSID=56b6259296256464a178e043c6597894; security=medium<br><span class="hljs-attribute">Connection</span><span class="hljs-punctuation">: </span>close<br><br><span class="language-ini"><span class="hljs-attr">id</span>=<span class="hljs-number">1</span>&amp;Submit=Submit</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="源码-1"><a href="#源码-1" class="headerlink" title="源码"></a>源码</h2><p>源码如下，源码使用了 mysql_real_escape_string() 函数转义字符串中的特殊字符。也就是说特殊符号 \x00、\n、\r、\、’、” 和 \x1a 都将进行转义。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br><br><span class="hljs-keyword">if</span>( <span class="hljs-keyword">isset</span>( <span class="hljs-variable">$_POST</span>[ <span class="hljs-string">&#x27;Submit&#x27;</span> ]  ) ) &#123;<br>    <span class="hljs-comment">// Get input</span><br>    <span class="hljs-variable">$id</span> = <span class="hljs-variable">$_POST</span>[ <span class="hljs-string">&#x27;id&#x27;</span> ];<br>    <span class="hljs-variable">$id</span> = ((<span class="hljs-keyword">isset</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>]) &amp;&amp; <span class="hljs-title function_ invoke__">is_object</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>])) ? <span class="hljs-title function_ invoke__">mysqli_real_escape_string</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>],  <span class="hljs-variable">$id</span> ) : ((<span class="hljs-title function_ invoke__">trigger_error</span>(<span class="hljs-string">&quot;[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.&quot;</span>, E_USER_ERROR)) ? <span class="hljs-string">&quot;&quot;</span> : <span class="hljs-string">&quot;&quot;</span>));<br><br>    <span class="hljs-comment">// Check database</span><br>    <span class="hljs-variable">$getid</span>  = <span class="hljs-string">&quot;SELECT first_name, last_name FROM users WHERE user_id = <span class="hljs-subst">$id</span>;&quot;</span>;<br>    <span class="hljs-variable">$result</span> = <span class="hljs-title function_ invoke__">mysqli_query</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>],  <span class="hljs-variable">$getid</span> ); <span class="hljs-comment">// Removed &#x27;or die&#x27; to suppress mysql errors</span><br><br>    <span class="hljs-comment">// Get results</span><br>    <span class="hljs-variable">$num</span> = @<span class="hljs-title function_ invoke__">mysqli_num_rows</span>( <span class="hljs-variable">$result</span> ); <span class="hljs-comment">// The &#x27;@&#x27; character suppresses errors</span><br>    <span class="hljs-keyword">if</span>( <span class="hljs-variable">$num</span> &gt; <span class="hljs-number">0</span> ) &#123;<br>        <span class="hljs-comment">// Feedback for end user</span><br>        <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;pre&gt;User ID exists in the database.&lt;/pre&gt;&#x27;</span>;<br>    &#125;<br>    <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">// Feedback for end user</span><br>        <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;pre&gt;User ID is MISSING from the database.&lt;/pre&gt;&#x27;</span>;<br>    &#125;<br><br>    <span class="hljs-comment">//mysql_close();</span><br>&#125;<br><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="攻击思路-1"><a href="#攻击思路-1" class="headerlink" title="攻击思路"></a>攻击思路</h2><ol>
+<li>布尔盲注<br>值得一提的是，单引号在中级别的代码中被过滤了，不过我们可以使用 ASCII 码的值来代替原来单引号括起来的字符。MySql 的 ASCII() 函数把字符转换成 ascii 码值，然后我们同样把版本号的各个字符提取出来，然后和 0 ~ 9 和 “.” 11 个字符的 ascii 码值作比较。<ul>
+<li>获取数据库版本号<ul>
+<li>判断第1位是不是1,<code>1 and ascii(substr(version(),1,1)) = 49 #</code></li>
+</ul>
+</li>
+<li>获取数据库名<ul>
+<li>判断数据库名第1位是d,<code>1 and ascii(substr(database(),1,1))=100 #</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>时间盲注(过程类似布尔盲注)<ul>
+<li>获取数据库版本号<ul>
+<li>判断第1位是不是1,<code>1 and if(ascii(substr(version(),1,1)) = 49,sleep(3),1) #</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h1 id="high"><a href="#high" class="headerlink" title="high"></a>high</h1><h2 id="源码-2"><a href="#源码-2" class="headerlink" title="源码"></a>源码</h2><p>源码如下，High 级别的只是在 SQL 查询语句中添加了 LIMIT 1，这令服务器仅回显查询到的一个结果。同时源码利用了 cookie 传递参数 id，当 SQL 查询结果为空时会执行函数 sleep()，这是为了混淆基于时间的盲注的响应时间判断。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br><br><span class="hljs-keyword">if</span>( <span class="hljs-keyword">isset</span>( <span class="hljs-variable">$_COOKIE</span>[ <span class="hljs-string">&#x27;id&#x27;</span> ] ) ) &#123;<br>    <span class="hljs-comment">// Get input</span><br>    <span class="hljs-variable">$id</span> = <span class="hljs-variable">$_COOKIE</span>[ <span class="hljs-string">&#x27;id&#x27;</span> ];<br><br>    <span class="hljs-comment">// Check database</span><br>    <span class="hljs-variable">$getid</span>  = <span class="hljs-string">&quot;SELECT first_name, last_name FROM users WHERE user_id = &#x27;<span class="hljs-subst">$id</span>&#x27; LIMIT 1;&quot;</span>;<br>    <span class="hljs-variable">$result</span> = <span class="hljs-title function_ invoke__">mysqli_query</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>],  <span class="hljs-variable">$getid</span> ); <span class="hljs-comment">// Removed &#x27;or die&#x27; to suppress mysql errors</span><br><br>    <span class="hljs-comment">// Get results</span><br>    <span class="hljs-variable">$num</span> = @<span class="hljs-title function_ invoke__">mysqli_num_rows</span>( <span class="hljs-variable">$result</span> ); <span class="hljs-comment">// The &#x27;@&#x27; character suppresses errors</span><br>    <span class="hljs-keyword">if</span>( <span class="hljs-variable">$num</span> &gt; <span class="hljs-number">0</span> ) &#123;<br>        <span class="hljs-comment">// Feedback for end user</span><br>        <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;pre&gt;User ID exists in the database.&lt;/pre&gt;&#x27;</span>;<br>    &#125;<br>    <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">// Might sleep a random amount</span><br>        <span class="hljs-keyword">if</span>( <span class="hljs-title function_ invoke__">rand</span>( <span class="hljs-number">0</span>, <span class="hljs-number">5</span> ) = <span class="hljs-number">3</span> ) &#123;<br>            <span class="hljs-title function_ invoke__">sleep</span>( <span class="hljs-title function_ invoke__">rand</span>( <span class="hljs-number">2</span>, <span class="hljs-number">4</span> ) );<br>        &#125;<br><br>        <span class="hljs-comment">// User wasn&#x27;t found, so the page wasn&#x27;t!</span><br>        <span class="hljs-title function_ invoke__">header</span>( <span class="hljs-variable">$_SERVER</span>[ <span class="hljs-string">&#x27;SERVER_PROTOCOL&#x27;</span> ] . <span class="hljs-string">&#x27; 404 Not Found&#x27;</span> );<br><br>        <span class="hljs-comment">// Feedback for end user</span><br>        <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;pre&gt;User ID is MISSING from the database.&lt;/pre&gt;&#x27;</span>;<br>    &#125;<br><br>    ((<span class="hljs-title function_ invoke__">is_null</span>(<span class="hljs-variable">$___mysqli_res</span> = <span class="hljs-title function_ invoke__">mysqli_close</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>]))) ? <span class="hljs-literal">false</span> : <span class="hljs-variable">$___mysqli_res</span>);<br>&#125;<br><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="攻击思路-2"><a href="#攻击思路-2" class="headerlink" title="攻击思路"></a>攻击思路</h2><p>由于当查询不到结果时，服务器会等待一段时间，这会对时间盲注造成混淆，因此我们使用 bool 盲注。虽然查询语句添加了 LIMIT 1，但是我们可以利用 “#” 把它注释掉，这种防御形同虚设，此时 bool 盲注的过程与 Low 级别基本一样。</p>
+<ol>
+<li>布尔盲注<ul>
+<li>判断数据库版本第1位是1,<code>1&#39; and substr(version(),1,1) = &#39;1&#39; #</code></li>
+</ul>
+</li>
+</ol>
+<h1 id="impossible"><a href="#impossible" class="headerlink" title="impossible"></a>impossible</h1><h2 id="源码-3"><a href="#源码-3" class="headerlink" title="源码"></a>源码</h2><p>impossible 级别的代码采用了 PDO 技术，防止代码和查询数据的混杂，Anti-CSRFtoken 机制的加入了进一步提高了安全性。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br><br><span class="hljs-keyword">if</span>( <span class="hljs-keyword">isset</span>( <span class="hljs-variable">$_GET</span>[ <span class="hljs-string">&#x27;Submit&#x27;</span> ] ) ) &#123;<br>    <span class="hljs-comment">// Check Anti-CSRF token</span><br>    <span class="hljs-title function_ invoke__">checkToken</span>( <span class="hljs-variable">$_REQUEST</span>[ <span class="hljs-string">&#x27;user_token&#x27;</span> ], <span class="hljs-variable">$_SESSION</span>[ <span class="hljs-string">&#x27;session_token&#x27;</span> ], <span class="hljs-string">&#x27;index.php&#x27;</span> );<br><br>    <span class="hljs-comment">// Get input</span><br>    <span class="hljs-variable">$id</span> = <span class="hljs-variable">$_GET</span>[ <span class="hljs-string">&#x27;id&#x27;</span> ];<br><br>    <span class="hljs-comment">// Was a number entered?</span><br>    <span class="hljs-keyword">if</span>(<span class="hljs-title function_ invoke__">is_numeric</span>( <span class="hljs-variable">$id</span> )) &#123;<br>        <span class="hljs-comment">// Check the database</span><br>        <span class="hljs-variable">$data</span> = <span class="hljs-variable">$db</span>-&gt;<span class="hljs-title function_ invoke__">prepare</span>( <span class="hljs-string">&#x27;SELECT first_name, last_name FROM users WHERE user_id = (:id) LIMIT 1;&#x27;</span> );<br>        <span class="hljs-variable">$data</span>-&gt;<span class="hljs-title function_ invoke__">bindParam</span>( <span class="hljs-string">&#x27;:id&#x27;</span>, <span class="hljs-variable">$id</span>, PDO::<span class="hljs-variable constant_">PARAM_INT</span> );<br>        <span class="hljs-variable">$data</span>-&gt;<span class="hljs-title function_ invoke__">execute</span>();<br><br>        <span class="hljs-comment">// Get results</span><br>        <span class="hljs-keyword">if</span>( <span class="hljs-variable">$data</span>-&gt;<span class="hljs-title function_ invoke__">rowCount</span>() == <span class="hljs-number">1</span> ) &#123;<br>            <span class="hljs-comment">// Feedback for end user</span><br>            <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;pre&gt;User ID exists in the database.&lt;/pre&gt;&#x27;</span>;<br>        &#125;<br>        <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-comment">// User wasn&#x27;t found, so the page wasn&#x27;t!</span><br>            <span class="hljs-title function_ invoke__">header</span>( <span class="hljs-variable">$_SERVER</span>[ <span class="hljs-string">&#x27;SERVER_PROTOCOL&#x27;</span> ] . <span class="hljs-string">&#x27; 404 Not Found&#x27;</span> );<br><br>            <span class="hljs-comment">// Feedback for end user</span><br>            <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;pre&gt;User ID is MISSING from the database.&lt;/pre&gt;&#x27;</span>;<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// Generate Anti-CSRF token</span><br><span class="hljs-title function_ invoke__">generateSessionToken</span>();<br><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>SQL 注入攻击就是 Web 程序对用户的输入没有进行合法性判断，从而攻击者可以从前端向后端传入攻击参数，并且该参数被带入了后端执行。在很多情况下开发者会使用动态的 SQL 语句，这种语句是在程序执行过程中构造的，不过动态的 SQL 语句很容易被攻击者传入的参数改变其原本的功能。<br>当我们进行手工 SQL 注入时，往往是采取以下几个步骤：</p>
+<ol>
+<li>判断是否存在注入，注入是字符型还是数字型</li>
+<li>猜解SQL查询语句中的字段数；</li>
+<li>获取当前数据库；</li>
+<li>获取数据库中的表；</li>
+<li>获取表中的字段名；</li>
+</ol>
+<p>当开发者需要防御 SQL 注入攻击时，可以采用以下方法。</p>
+<ol>
+<li>过滤危险字符：可以使用正则表达式匹配各种 SQL 子句，例如 select,union,where 等，如果匹配到则退出程序。</li>
+<li>使用预编译语句：PDO 提供了一个数据访问抽象层，这意味着不管使用哪种数据库，都可以用相同的函数（方法）来查询和获取数据。使用 PDO 预编译语句应该使用占位符进行数据库的操作，而不是直接将变量拼接进去。</li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/" class="category-chain-item">渗透测试</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/%E9%9D%B6%E5%9C%BA/" class="category-chain-item">靶场</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/SQL%E7%9B%B2%E6%B3%A8/" class="print-no-link">#SQL盲注</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>SQL-injection-blind</div>
+      <div>http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection-blind/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>LYM</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年6月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/06/06/dvwa-XSS-relected/" title="dvwa-XSS-relected">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">dvwa-XSS-relected</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/06/05/dvwa-SQL-injection/" title="dvwa-SQL-injection">
+                        <span class="hidden-mobile">dvwa-SQL-injection</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      豫ICP备2022024455
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

